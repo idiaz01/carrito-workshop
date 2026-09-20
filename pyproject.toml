@@ -1,0 +1,36 @@
+[project]
+name = "carrito"
+version = "0.1.0"
+description = "Carrito: taller de LLMs y agentes, Nuclio 2026"
+requires-python = ">=3.13,<3.14"
+dependencies = ["openai>=3.16.2,<4", "pydantic>=2.13.5,<3", "python-dotenv>=1.1,<2", "mcp>=2.2.0,<3"]
+
+[project.optional-dependencies]
+langchain = ["langchain-openai==1.6.2"]
+
+[project.scripts]
+carrito = "carrito.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=9.1.1,<10", "ruff>=0.16.8,<1", "nbformat>=5.10,<6", "nbclient>=0.10,<1", "ipykernel>=6.30", "jupyterlab>=4.6.3,<5"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/carrito"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["live: requires an API key and incurs API charges"]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["slides"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["E402", "E501"]

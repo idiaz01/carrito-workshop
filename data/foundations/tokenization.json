@@ -1,0 +1,234 @@
+{
+  "kind": "measured_tokenization_not_model_inference",
+  "encoding": "cl100k_base",
+  "library": "tiktoken",
+  "library_version": "0.14.0",
+  "measured_on": "2026-09-20",
+  "source": "https://github.com/openai/tiktoken",
+  "limitations": "Named encoding only, not a claim about OPENAI_MODEL. Token IDs are vocabulary indices, not word meanings. No model inference, API calls or model weights. Display pieces can contain partial UTF-8 bytes; bytes_hex reconstructs the original text.",
+  "examples": [
+    {
+      "text": "Hola, mundo.",
+      "token_ids": [
+        69112,
+        11,
+        29452,
+        13
+      ],
+      "token_count": 4,
+      "pieces": [
+        {
+          "bytes_hex": "486f6c61",
+          "display": "Hola"
+        },
+        {
+          "bytes_hex": "2c",
+          "display": ","
+        },
+        {
+          "bytes_hex": "206d756e646f",
+          "display": " mundo"
+        },
+        {
+          "bytes_hex": "2e",
+          "display": "."
+        }
+      ]
+    },
+    {
+      "text": "anticonstitucionalmente",
+      "token_ids": [
+        519,
+        1965,
+        3781,
+        1791,
+        4001,
+        12826
+      ],
+      "token_count": 6,
+      "pieces": [
+        {
+          "bytes_hex": "616e74",
+          "display": "ant"
+        },
+        {
+          "bytes_hex": "69636f6e",
+          "display": "icon"
+        },
+        {
+          "bytes_hex": "73746974",
+          "display": "stit"
+        },
+        {
+          "bytes_hex": "7563",
+          "display": "uc"
+        },
+        {
+          "bytes_hex": "696f6e616c",
+          "display": "ional"
+        },
+        {
+          "bytes_hex": "6d656e7465",
+          "display": "mente"
+        }
+      ]
+    },
+    {
+      "text": "P001 cuesta 69,90 €.",
+      "token_ids": [
+        47,
+        4119,
+        272,
+        20006,
+        220,
+        3076,
+        11,
+        1954,
+        13281,
+        13
+      ],
+      "token_count": 10,
+      "pieces": [
+        {
+          "bytes_hex": "50",
+          "display": "P"
+        },
+        {
+          "bytes_hex": "303031",
+          "display": "001"
+        },
+        {
+          "bytes_hex": "2063",
+          "display": " c"
+        },
+        {
+          "bytes_hex": "7565737461",
+          "display": "uesta"
+        },
+        {
+          "bytes_hex": "20",
+          "display": " "
+        },
+        {
+          "bytes_hex": "3639",
+          "display": "69"
+        },
+        {
+          "bytes_hex": "2c",
+          "display": ","
+        },
+        {
+          "bytes_hex": "3930",
+          "display": "90"
+        },
+        {
+          "bytes_hex": "20e282ac",
+          "display": " €"
+        },
+        {
+          "bytes_hex": "2e",
+          "display": "."
+        }
+      ]
+    },
+    {
+      "text": "P001 cuesta 89,90 €.",
+      "token_ids": [
+        47,
+        4119,
+        272,
+        20006,
+        220,
+        4578,
+        11,
+        1954,
+        13281,
+        13
+      ],
+      "token_count": 10,
+      "pieces": [
+        {
+          "bytes_hex": "50",
+          "display": "P"
+        },
+        {
+          "bytes_hex": "303031",
+          "display": "001"
+        },
+        {
+          "bytes_hex": "2063",
+          "display": " c"
+        },
+        {
+          "bytes_hex": "7565737461",
+          "display": "uesta"
+        },
+        {
+          "bytes_hex": "20",
+          "display": " "
+        },
+        {
+          "bytes_hex": "3839",
+          "display": "89"
+        },
+        {
+          "bytes_hex": "2c",
+          "display": ","
+        },
+        {
+          "bytes_hex": "3930",
+          "display": "90"
+        },
+        {
+          "bytes_hex": "20e282ac",
+          "display": " €"
+        },
+        {
+          "bytes_hex": "2e",
+          "display": "."
+        }
+      ]
+    },
+    {
+      "text": "New York",
+      "token_ids": [
+        3648,
+        4356
+      ],
+      "token_count": 2,
+      "pieces": [
+        {
+          "bytes_hex": "4e6577",
+          "display": "New"
+        },
+        {
+          "bytes_hex": "20596f726b",
+          "display": " York"
+        }
+      ]
+    },
+    {
+      "text": "Nueva York",
+      "token_ids": [
+        45,
+        51758,
+        4356
+      ],
+      "token_count": 3,
+      "pieces": [
+        {
+          "bytes_hex": "4e",
+          "display": "N"
+        },
+        {
+          "bytes_hex": "75657661",
+          "display": "ueva"
+        },
+        {
+          "bytes_hex": "20596f726b",
+          "display": " York"
+        }
+      ]
+    }
+  ]
+}

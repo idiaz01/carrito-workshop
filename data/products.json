@@ -1,0 +1,162 @@
+[
+  {
+    "product_id": "P001",
+    "name": "Auriculares Nube",
+    "category": "audio",
+    "price_cents": 6990,
+    "description": "auriculares inalámbricos bluetooth batería 30 horas",
+    "returnable": true
+  },
+  {
+    "product_id": "P002",
+    "name": "Auriculares Estudio",
+    "category": "audio",
+    "price_cents": 12900,
+    "description": "auriculares cable cancelación ruido",
+    "returnable": true
+  },
+  {
+    "product_id": "P003",
+    "name": "Altavoz Brisa",
+    "category": "audio",
+    "price_cents": 4590,
+    "description": "altavoz bluetooth portátil resistente salpicaduras",
+    "returnable": true
+  },
+  {
+    "product_id": "P004",
+    "name": "Micrófono Claro",
+    "category": "audio",
+    "price_cents": 5990,
+    "description": "micrófono USB sobremesa",
+    "returnable": true
+  },
+  {
+    "product_id": "P005",
+    "name": "Teclado Arena",
+    "category": "oficina",
+    "price_cents": 4990,
+    "description": "teclado español compacto cable USB",
+    "returnable": true
+  },
+  {
+    "product_id": "P006",
+    "name": "Ratón Río",
+    "category": "oficina",
+    "price_cents": 2490,
+    "description": "ratón inalámbrico bluetooth silencioso",
+    "returnable": true
+  },
+  {
+    "product_id": "P007",
+    "name": "Soporte Alto",
+    "category": "oficina",
+    "price_cents": 3290,
+    "description": "soporte portátil aluminio ajustable",
+    "returnable": true
+  },
+  {
+    "product_id": "P008",
+    "name": "Webcam Luz",
+    "category": "oficina",
+    "price_cents": 7990,
+    "description": "cámara webcam 1080p USB",
+    "returnable": true
+  },
+  {
+    "product_id": "P009",
+    "name": "Lámpara Luna",
+    "category": "hogar",
+    "price_cents": 3990,
+    "description": "lámpara LED escritorio intensidad regulable",
+    "returnable": true
+  },
+  {
+    "product_id": "P010",
+    "name": "Botella Ola",
+    "category": "hogar",
+    "price_cents": 1990,
+    "description": "botella acero 750 ml azul",
+    "returnable": true
+  },
+  {
+    "product_id": "P011",
+    "name": "Taza Alba",
+    "category": "hogar",
+    "price_cents": 1290,
+    "description": "taza cerámica 350 ml blanca",
+    "returnable": true
+  },
+  {
+    "product_id": "P012",
+    "name": "Manta Nido",
+    "category": "hogar",
+    "price_cents": 3490,
+    "description": "manta algodón 130 x 170 cm",
+    "returnable": true
+  },
+  {
+    "product_id": "P013",
+    "name": "Mochila Ruta",
+    "category": "viaje",
+    "price_cents": 5490,
+    "description": "mochila portátil 15 pulgadas 20 litros",
+    "returnable": true
+  },
+  {
+    "product_id": "P014",
+    "name": "Bolsa Paseo",
+    "category": "viaje",
+    "price_cents": 2290,
+    "description": "bolsa plegable algodón 12 litros",
+    "returnable": true
+  },
+  {
+    "product_id": "P015",
+    "name": "Organizador Cable",
+    "category": "viaje",
+    "price_cents": 1490,
+    "description": "estuche organizador cables cremallera",
+    "returnable": true
+  },
+  {
+    "product_id": "P016",
+    "name": "Cargador Puerto",
+    "category": "energía",
+    "price_cents": 2990,
+    "description": "cargador USB C 45 W",
+    "returnable": true
+  },
+  {
+    "product_id": "P017",
+    "name": "Batería Faro",
+    "category": "energía",
+    "price_cents": 4290,
+    "description": "batería externa USB C 10000 mAh",
+    "returnable": true
+  },
+  {
+    "product_id": "P018",
+    "name": "Cable Trenza",
+    "category": "energía",
+    "price_cents": 990,
+    "description": "cable USB C 2 metros",
+    "returnable": true
+  },
+  {
+    "product_id": "P019",
+    "name": "Taza con Nombre",
+    "category": "personalizado",
+    "price_cents": 2490,
+    "description": "taza personalizada con nombre",
+    "returnable": false
+  },
+  {
+    "product_id": "P020",
+    "name": "Guía Digital Orden",
+    "category": "digital",
+    "price_cents": 890,
+    "description": "descarga digital guía organización",
+    "returnable": false
+  }
+]

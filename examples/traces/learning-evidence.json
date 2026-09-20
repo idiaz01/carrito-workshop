@@ -1,0 +1,371 @@
+{
+  "provenance": "Executed local Python/SQLite; model decisions are scripted fixtures. No measured LLM quality or live cost.",
+  "context": {
+    "selected_ids": [
+      "P001"
+    ],
+    "omitted_ids": [
+      "AD"
+    ],
+    "evidence_chars": 77,
+    "budget_unit": "serialized characters, not tokens"
+  },
+  "retrieval_conditions": [
+    {
+      "method": "lexical overlap",
+      "top_k": 1,
+      "cases": [
+        {
+          "id": "R1",
+          "query": "devolución plazo días",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R2",
+          "query": "reintegro",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [],
+          "recall": 0.0,
+          "precision": 0
+        },
+        {
+          "id": "R3",
+          "query": "personalizados devolución",
+          "relevant_ids": [
+            "POL-EXC",
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-EXC"
+          ],
+          "recall": 0.5,
+          "precision": 1.0
+        },
+        {
+          "id": "R4",
+          "query": "garantía",
+          "relevant_ids": [
+            "POL-GAR"
+          ],
+          "retrieved_ids": [
+            "POL-EXC"
+          ],
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        {
+          "id": "R5",
+          "query": "cancelación",
+          "relevant_ids": [
+            "POL-CAN"
+          ],
+          "retrieved_ids": [
+            "POL-CAN"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R6",
+          "query": "arrepentimiento",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [],
+          "recall": 0.0,
+          "precision": 0
+        }
+      ],
+      "mean_recall": 0.4166666666666667,
+      "mean_precision": 0.5
+    },
+    {
+      "method": "lexical overlap + explicit query expansion",
+      "top_k": 1,
+      "cases": [
+        {
+          "id": "R1",
+          "query": "devolución plazo días",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R2",
+          "query": "reintegro",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R3",
+          "query": "personalizados devolución",
+          "relevant_ids": [
+            "POL-EXC",
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-EXC"
+          ],
+          "recall": 0.5,
+          "precision": 1.0
+        },
+        {
+          "id": "R4",
+          "query": "garantía",
+          "relevant_ids": [
+            "POL-GAR"
+          ],
+          "retrieved_ids": [
+            "POL-EXC"
+          ],
+          "recall": 0.0,
+          "precision": 0.0
+        },
+        {
+          "id": "R5",
+          "query": "cancelación",
+          "relevant_ids": [
+            "POL-CAN"
+          ],
+          "retrieved_ids": [
+            "POL-CAN"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R6",
+          "query": "arrepentimiento",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        }
+      ],
+      "mean_recall": 0.75,
+      "mean_precision": 0.8333333333333334
+    },
+    {
+      "method": "lexical overlap",
+      "top_k": 2,
+      "cases": [
+        {
+          "id": "R1",
+          "query": "devolución plazo días",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV",
+            "POL-ENV"
+          ],
+          "recall": 1.0,
+          "precision": 0.5
+        },
+        {
+          "id": "R2",
+          "query": "reintegro",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [],
+          "recall": 0.0,
+          "precision": 0
+        },
+        {
+          "id": "R3",
+          "query": "personalizados devolución",
+          "relevant_ids": [
+            "POL-EXC",
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-EXC",
+            "POL-DEV"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R4",
+          "query": "garantía",
+          "relevant_ids": [
+            "POL-GAR"
+          ],
+          "retrieved_ids": [
+            "POL-EXC",
+            "POL-GAR"
+          ],
+          "recall": 1.0,
+          "precision": 0.5
+        },
+        {
+          "id": "R5",
+          "query": "cancelación",
+          "relevant_ids": [
+            "POL-CAN"
+          ],
+          "retrieved_ids": [
+            "POL-CAN"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R6",
+          "query": "arrepentimiento",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [],
+          "recall": 0.0,
+          "precision": 0
+        }
+      ],
+      "mean_recall": 0.6666666666666666,
+      "mean_precision": 0.5
+    },
+    {
+      "method": "lexical overlap + explicit query expansion",
+      "top_k": 2,
+      "cases": [
+        {
+          "id": "R1",
+          "query": "devolución plazo días",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV",
+            "POL-ENV"
+          ],
+          "recall": 1.0,
+          "precision": 0.5
+        },
+        {
+          "id": "R2",
+          "query": "reintegro",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV",
+            "POL-EXC"
+          ],
+          "recall": 1.0,
+          "precision": 0.5
+        },
+        {
+          "id": "R3",
+          "query": "personalizados devolución",
+          "relevant_ids": [
+            "POL-EXC",
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-EXC",
+            "POL-DEV"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R4",
+          "query": "garantía",
+          "relevant_ids": [
+            "POL-GAR"
+          ],
+          "retrieved_ids": [
+            "POL-EXC",
+            "POL-GAR"
+          ],
+          "recall": 1.0,
+          "precision": 0.5
+        },
+        {
+          "id": "R5",
+          "query": "cancelación",
+          "relevant_ids": [
+            "POL-CAN"
+          ],
+          "retrieved_ids": [
+            "POL-CAN"
+          ],
+          "recall": 1.0,
+          "precision": 1.0
+        },
+        {
+          "id": "R6",
+          "query": "arrepentimiento",
+          "relevant_ids": [
+            "POL-DEV"
+          ],
+          "retrieved_ids": [
+            "POL-DEV",
+            "POL-EXC"
+          ],
+          "recall": 1.0,
+          "precision": 0.5
+        }
+      ],
+      "mean_recall": 1.0,
+      "mean_precision": 0.6666666666666666
+    }
+  ],
+  "contract": {
+    "before_passed": 2,
+    "after_passed": 4,
+    "total": 4,
+    "model_quality_measured": false
+  },
+  "trace_counts": [
+    {
+      "query": "auriculares",
+      "model_calls": 2,
+      "tool_calls": 1,
+      "tool_errors": 0
+    },
+    {
+      "query": "telescopio",
+      "model_calls": 2,
+      "tool_calls": 1,
+      "tool_errors": 0
+    },
+    {
+      "query": "teclado",
+      "model_calls": 2,
+      "tool_calls": 1,
+      "tool_errors": 0
+    },
+    {
+      "query": "monitor",
+      "model_calls": 2,
+      "tool_calls": 1,
+      "tool_errors": 0
+    }
+  ]
+}

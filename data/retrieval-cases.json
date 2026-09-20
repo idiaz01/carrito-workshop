@@ -1,0 +1,8 @@
+[
+  {"id":"R1","query":"devolución plazo días","relevant_ids":["POL-DEV"]},
+  {"id":"R2","query":"reintegro","relevant_ids":["POL-DEV"]},
+  {"id":"R3","query":"personalizados devolución","relevant_ids":["POL-EXC","POL-DEV"]},
+  {"id":"R4","query":"garantía","relevant_ids":["POL-GAR"]},
+  {"id":"R5","query":"cancelación","relevant_ids":["POL-CAN"]},
+  {"id":"R6","query":"arrepentimiento","relevant_ids":["POL-DEV"]}
+]
