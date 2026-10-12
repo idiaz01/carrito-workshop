@@ -35,13 +35,13 @@ Más detalle y solución de problemas: [setup](docs/setup.md).
 
 ## Cinco sesiones, un proyecto
 
-| Sesión | Qué construimos |
-|---|---|
-| [1 · Fundamentals of GenAI and LLMs](sessions/01_models/) | Una primera petición con evidencia, después de explorar tokens y generación |
-| [2 · Context Engineering and Working with LLMs](sessions/02_context/) | Contexto seleccionado, estado explícito y salidas con contrato |
-| [3 · Building with LangChain, RAG, and Tools](sessions/03_retrieval_tools/) | Retrieval medido, tools e integración MCP |
-| [4 · Designing Agents + Agentic Workflows](sessions/04_agents_state/) | Un agente con límites, confirmación y recuperación de errores |
-| [5 · Building a Custom Agent](sessions/05_capstone/) | Un perfil propio y una mejora comprobada con casos y trazas |
+| Sesión                                                                      | Qué construimos                                                             |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [1 · Fundamentals of GenAI and LLMs](sessions/01_models/)                   | Una primera petición con evidencia, después de explorar tokens y generación |
+| [2 · Context Engineering and Working with LLMs](sessions/02_context/)       | Contexto seleccionado, estado explícito y salidas con contrato              |
+| [3 · Building with LangChain, RAG, and Tools](sessions/03_retrieval_tools/) | Retrieval medido, tools e integración MCP                                   |
+| [4 · Designing Agents + Agentic Workflows](sessions/04_agents_state/)       | Un agente con límites, confirmación y recuperación de errores               |
+| [5 · Building a Custom Agent](sessions/05_capstone/)                        | Un perfil propio y una mejora comprobada con casos y trazas                 |
 
 Cada notebook empieza desde datos preparados. No necesitas la sesión anterior.
 
@@ -76,7 +76,3 @@ uv run python scripts/check_student_repo.py
 ```
 
 Los tests y los notebooks usan un cliente falso (`CARRITO_OFFLINE_CHECK=1`). Comprueban el código, no las respuestas del modelo. No uses esa variable en clase.
-
-## Procedencia
-
-Código y datos propios. El entorno de comercio con tools y evals se inspira en [Cartwheel](https://github.com/ai-evals-course/cartwheel-homeworks). Consulta [las atribuciones](THIRD_PARTY_NOTICES.md).
