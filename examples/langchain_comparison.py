@@ -8,7 +8,7 @@ from carrito.langchain_demo import run_comparison
 
 def main():
     parser = argparse.ArgumentParser(description="Same Carrito catalog through LangChain")
-    parser.add_argument("--mode", choices=["fixture", "live"], default="fixture")
+    parser.add_argument("--mode", choices=["fixture", "live"], default="live")
     args = parser.parse_args()
     print(json.dumps(run_comparison(live=args.mode == "live"), ensure_ascii=False, indent=2))
 

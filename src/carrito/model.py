@@ -1,9 +1,11 @@
-"""Native Responses API and explicitly labelled model-free fixtures."""
+"""Native Responses API, session-key helpers and scripted models for tests."""
 
 import copy
 import json
 import os
 from dataclasses import dataclass
+from pathlib import Path
+from time import perf_counter
 
 from pydantic import BaseModel, ConfigDict
 
@@ -28,28 +30,102 @@ def response_status(response, output):
     return getattr(response, "status", "completed")
 
 
+ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
+# CI and tests only: replaces the API with a fake client. Students never set it.
+OFFLINE_CHECK = "CARRITO_OFFLINE_CHECK"
+
+API_ERRORS = {
+    "AuthenticationError": (
+        "La clave no es válida o ya caducó. Copia la clave de hoy en .env y repite la celda."
+    ),
+    "PermissionDeniedError": "La clave no tiene acceso a este modelo. Avisa al docente.",
+    "NotFoundError": "El modelo de OPENAI_MODEL no existe o no está disponible. Revisa .env.",
+    "RateLimitError": (
+        "Límite de uso alcanzado. Espera un minuto y repite. Si sigue, avisa al docente."
+    ),
+    "APIConnectionError": "No hay conexión con la API. Revisa la red y repite.",
+    "APITimeoutError": "La API tardó demasiado. Repite la celda.",
+    "BadRequestError": "La API rechazó la petición. Revisa que OPENAI_MODEL admite esta función.",
+}
+
+
+def load_settings():
+    """Read .env on every call: a new session key works without a kernel restart."""
+    from dotenv import load_dotenv
+
+    load_dotenv(ENV_FILE, override=True)
+
+
+def _rejects_reasoning_include(exc: Exception) -> bool:
+    if type(exc).__name__ != "BadRequestError":
+        return False
+    body = getattr(exc, "body", None)
+    text = (body.get("message") if isinstance(body, dict) else None) or str(exc)
+    return "encrypted_content" in text or "include" in text
+
+
+def offline_check() -> bool:
+    return os.getenv(OFFLINE_CHECK) == "1"
+
+
+def explain_api_error(exc: Exception, detail: bool = False) -> str:
+    """Short Spanish message for students. Never includes the key."""
+    name = type(exc).__name__
+    message = API_ERRORS.get(name, f"Error de la API ({name}). Repite; si sigue, avisa al docente.")
+    if detail and name in {"BadRequestError", "NotFoundError"}:
+        body = getattr(exc, "body", None)
+        text = body.get("message") if isinstance(body, dict) else None
+        if text:
+            message += f" Detalle: {text}"
+    return message
+
+
+def make_client():
+    if offline_check():
+        from carrito.offline import OfflineClient
+
+        return OfflineClient()
+    from openai import OpenAI
+
+    if not os.getenv("OPENAI_API_KEY"):
+        raise RuntimeError("Falta OPENAI_API_KEY en .env. Pega la clave de la sesión y repite.")
+    return OpenAI()
+
+
 class OpenAIModel:
     mode = "live"
 
     def __init__(self, client=None, model: str | None = None):
-        from dotenv import load_dotenv
-        from openai import OpenAI
-
-        load_dotenv()
+        load_settings()
         self.model = model or os.environ.get("OPENAI_MODEL")
+        if not self.model and offline_check():
+            self.model = "offline-check"
         if not self.model:
-            raise ValueError("Set OPENAI_MODEL explicitly before a live call.")
-        self.client = client or OpenAI()
+            raise RuntimeError("Falta OPENAI_MODEL en .env. Copia la línea de .env.example.")
+        self.client = client or make_client()
+
+    include_reasoning = True
 
     def respond(self, messages: list[dict], tools: list[dict]) -> ModelTurn:
-        response = self.client.responses.create(
-            model=self.model,
-            input=messages,
-            tools=tools,
-            include=["reasoning.encrypted_content"],
-            max_output_tokens=1200,
-            store=False,
-        )
+        request = {
+            "model": self.model,
+            "input": messages,
+            "max_output_tokens": 1200,
+            "store": False,
+        }
+        if tools:
+            request["tools"] = tools
+        if self.include_reasoning:
+            request["include"] = ["reasoning.encrypted_content"]
+        try:
+            response = self.client.responses.create(**request)
+        except Exception as exc:
+            # Non-reasoning models may reject the reasoning include: retry once without it.
+            if not (self.include_reasoning and _rejects_reasoning_include(exc)):
+                raise
+            self.include_reasoning = False
+            request.pop("include")
+            response = self.client.responses.create(**request)
         output = [
             item if isinstance(item, dict) else item.model_dump(exclude_none=True)
             for item in response.output
@@ -185,14 +261,19 @@ def recommend_structured(
 
 
 def native_call(messages: list[dict], client=None, model: str | None = None) -> dict:
-    """Session 1: one native request, no tools, no loop. This is a LIVE call."""
+    """Session 1: one native request, no tools, no loop."""
     adapter = OpenAIModel(client=client, model=model)
-    response = adapter.client.responses.create(
-        model=adapter.model,
-        input=messages,
-        max_output_tokens=800,
-        store=False,
-    )
+    try:
+        response = adapter.client.responses.create(
+            model=adapter.model,
+            input=messages,
+            max_output_tokens=800,
+            store=False,
+        )
+    except Exception as exc:
+        if type(exc).__module__.startswith("openai"):
+            raise RuntimeError(explain_api_error(exc, detail=True)) from None
+        raise
     return {
         "output_text": response.output_text,
         "output": [
@@ -202,4 +283,24 @@ def native_call(messages: list[dict], client=None, model: str | None = None) -> 
         "usage": response.usage.model_dump() if response.usage else {},
         "model": response.model,
         "status": getattr(response, "status", "completed"),
+    }
+
+
+def live_check(client=None) -> dict:
+    """One short call through the same path as the agent. Run it at the start of class."""
+    started = perf_counter()
+    try:
+        model = OpenAIModel(client=client)
+        turn = model.respond([{"role": "user", "content": "Responde solo: OK"}], [])
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        raise RuntimeError(explain_api_error(exc, detail=True)) from None
+    if turn.status != "completed":
+        raise RuntimeError(f"La API respondió con estado {turn.status}. Avisa al docente.")
+    return {
+        "api": "OK",
+        "model": model.model,
+        "latency_s": round(perf_counter() - started, 1),
+        "answer": turn.text.strip()[:40],
     }
