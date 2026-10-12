@@ -4,13 +4,10 @@ Qué observar en cada sección del [notebook](starter.ipynb). Método: predice �
 
 | Sección | Qué observar |
 |---|---|
-| Qué vamos a observar | La primera celda comprueba la clave. Debe mostrar `'api': 'OK'` |
-| Una historia de representaciones y objetivos | Capacidad aprendida, evidencia en el contexto y acceso a tools son cosas distintas |
-| Demo 1: un token no es necesariamente una palabra | Compara palabras y tokens en espacios, cifras y puntuación |
-| Demo 2: distribución del siguiente token | El prefijo cambia la distribución. La tabla del toy no cambia |
-| Transformer | La máscara causal pone a cero las posiciones posteriores |
-| Qué se aprende y qué permanece fijo | En inferencia, los parámetros no cambian. Pegar datos no entrena |
-| Inferencia y decoding | T cambia la forma de la distribución, no el orden. T no controla las alucinaciones |
+| Preparación | La celda comprueba la clave. Debe mostrar `'api': 'OK'` |
+| Experimento 1 · Misma pregunta, tres respuestas | El modelo sortea tokens: las respuestas cambian. `usage` da los tokens y el coste |
+| Experimento 2 · Sin datos y con datos | Sin datos, inventa o reconoce que no sabe. Con datos, responde 69,90 € |
+| Experimento 3 · El modelo no tiene memoria | Cada llamada empieza de cero. Reenviando el historial, «recuerda» |
 | Contexto contrafactual | Con 89,90 €, ¿el modelo cambia la conclusión? |
 | Capacidades, límites y entrada multimodal | ¿Qué se ve en la imagen y qué hay que consultar? |
 | Modelo, aplicación, workflow y agente | ¿Quién debe comprobar un precio? |
@@ -19,10 +16,10 @@ Qué observar en cada sección del [notebook](starter.ipynb). Método: predice �
 
 ## Debes poder explicar
 
-- Token frente a palabra.
-- Generación paso a paso.
-- Parámetros frente a contexto.
-- Por qué cambiar T no demuestra que una respuesta sea correcta.
+- Qué hace un LLM: predecir el siguiente token y sortear.
+- Por qué la misma pregunta da respuestas distintas.
+- Por qué sin datos puede inventar, y con datos responde bien.
+- Por qué el modelo no recuerda nada entre llamadas.
 - Qué caso de la evaluación falló y por qué.
 
 Los checks `OK` comprueban el código. No miden la calidad del modelo.
