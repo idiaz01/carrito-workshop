@@ -1,25 +1,18 @@
-# 4 · Designing Agents + Agentic Workflows
-Ahora configuramos el agente real de Carrito: objetivos, capacidades y límites.
-El checkpoint de preferencias no es una reanudación automática de ejecución.
+# 4 · Guía de la sesión
 
-Predice el resultado antes de ejecutar y anota tus observaciones.
+Qué observar en cada sección del [notebook](starter.ipynb). Método: predice → ejecuta → compara → explica.
 
-## Configurar el loop real
-Configura un perfil de lectura. Predice tres recorridos: final normal, tool no permitida y límite de pasos. Cada decisión del fixture está preescrita; el host ejecuta controles reales. Cambiar el prompt no concede permisos.
+| Sección | Qué observar |
+|---|---|
+| Configurar el loop real | Tres recorridos: el modelo real, un loop y una tool no permitida. Los dos fallos usan un modelo guionizado; los controles del host son reales |
+| Estado y recuperación | Las preferencias sobreviven. La ejecución y la confirmación pendiente no |
+| Recovery + confirmación | Un error transitorio se repite. Un error permanente no. Una escritura confirmada crea una sola solicitud |
+| Traces y decisiones de diseño | Primera divergencia, control que la limita y dato para el diagnóstico |
 
-## Estado y recuperación: qué sobrevive
-Guardamos preferencias explícitas, destruimos el objeto en memoria y lo recuperamos.
-Esto NO conserva un programa en ejecución ni su call stack. Para retomar una acción hay que comprobar estado de negocio, identidad y confirmación de nuevo.
+## Debes poder explicar
 
-## Recovery + confirmación
-Clasifica errores permanentes y transitorios. Completa una operación de lectura que falle una vez y después consulte SQLite. Compárala con pedido ajeno: ese error no debe reintentarse. Después confirma el payload exacto y repite la escritura; debe existir una sola solicitud.
+- Los límites del perfil.
+- Dos decisiones workflow frente a agent.
+- Una traza diagnosticada.
 
-## Traces y decisiones de diseño
-Inspecciona un recorrido correcto y el loop detenido. Señala la primera divergencia, el control que la limita y el dato que necesitas para diagnosticarlo. Un timeout y una denegación necesitan respuestas distintas. No confundir latencia de fixture con rendimiento real del LLM.
-
-## Salida de sesión
-Entrega límites del perfil, dos decisiones workflow/agent y una traza diagnosticada. S5 usa el mismo runtime para configurar, evaluar y mejorar una aplicación completa.
-
-## Comprobación final
-
-Reinicia el kernel y ejecuta todo. Revisa cada mensaje PENDIENTE sin alterar los checks para que pasen. Anota qué comportamiento has comprobado y qué afirmaciones requieren revisión humana.
+Los checks `OK` comprueban el código. No miden la calidad del modelo.

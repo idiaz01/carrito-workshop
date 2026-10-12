@@ -1,13 +1,17 @@
 # Ejemplos ejecutables
 
-- `uv run carrito demo --mode fixture`: modelo preescrito, tools reales.
-- `uv run carrito chat --mode fixture`: escenarios preescritos con historial. `/confirm` confirma el pedido y motivo mostrados; `/quit` termina. `--mode live` usa OPENAI_MODEL y consume API.
-- `uv run --extra langchain python examples/langchain_comparison.py --mode fixture`: comparación de retrieval y tools con LangChain; [guía](langchain-comparison.md).
-- `uv run carrito mcp-smoke`: servidor/cliente stdio real, solo catálogo.
-- `uv run carrito skill-demo`: compara activación y muestra el procedimiento añadido al contexto.
-- `uv run carrito judge-demo`: tres juicios preescritos con un desacuerdo deliberado frente a etiquetas humanas; `--mode live` usa un juez real.
-- `uv run python examples/multimodal.py`: inspecciona la forma de una petición con una tarjeta de producto original; no llama API. `--mode live` envía la imagen preparada al modelo. La visión no prueba stock, garantía o batería.
+Todos usan la clave y el modelo de `.env`.
 
-La demo de multimodalidad muestra la estructura de una petición con imagen. El loop base es Python. LangGraph queda como lectura opcional para persistencia/orquestación más compleja; no es dependencia del taller.
+| Comando | Qué muestra |
+|---|---|
+| `uv run carrito demo` | Una pregunta al agente con tools reales |
+| `uv run carrito chat` | Conversación con historial. `/confirm` confirma el payload mostrado; `/quit` sale |
+| `uv run python examples/langchain_comparison.py` | Retrieval y tools con LangChain. [Guía](langchain-comparison.md) |
+| `uv run carrito mcp-smoke` | Servidor y cliente MCP por stdio, solo catálogo. [Guía](mcp/README.md) |
+| `uv run carrito skill-demo` | Activación de la Skill y procedimiento añadido al contexto |
+| `uv run carrito judge-demo` | Juez LLM frente a tres etiquetas humanas |
+| `uv run python examples/multimodal.py` | Envía la tarjeta de producto al modelo. Una imagen no prueba stock, garantía ni batería |
+| `uv run python examples/foundations.py` | Tokenización medida y toy de probabilidades. Sin API |
+| `uv run python examples/learning_labs.py` | Experimentos de contexto, retrieval y contrato. Sin API. [Guía](learning-labs.md) |
 
-- `uv run python examples/learning_labs.py`: experimentos compartidos de contexto, retrieval y contrato del agente. [Guía y API](learning-labs.md).
+El agent loop es Python. LangGraph es una lectura opcional, no una dependencia del taller.

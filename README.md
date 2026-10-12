@@ -2,72 +2,81 @@
 
 Workshop de **Generative AI y AI Agents** del Máster en Data Science & AI de Nuclio.
 
-Construye un asistente de tienda online que consulta un catálogo, recupera políticas, usa herramientas y registra solicitudes de devolución con confirmación. A lo largo de cinco sesiones evolucionarás desde una llamada a un LLM hasta un agente que puedes observar, evaluar y mejorar.
+Construimos un asistente de tienda online. El asistente consulta un catálogo, recupera políticas, usa tools y registra solicitudes de devolución con confirmación. En cinco sesiones pasamos de una llamada a un LLM a un agente que podemos observar, evaluar y mejorar.
 
 **Iván Díaz Garnacho** · AI Solutions Architect — Siemens Energy · Co-Founder — Iwana Labs
 [LinkedIn](https://linkedin.com/in/ivandiazgarnacho) · [Iwana Labs](https://iwanalabs.com)
 
-## Empezar
+## Cómo funciona la clase
+
+El docente comparte pantalla y ejecuta cada notebook. Tú ejecutas las mismas celdas en tu equipo, al mismo tiempo.
+El código ya está completo. No tienes que escribir código ni entregar nada.
+
+Cada sesión usa una clave de API nueva. El docente la comparte al inicio de la sesión.
+
+## Empezar (una vez, antes de la primera sesión)
 
 Necesitas Python 3.13, Git y [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/idiaz01/carrito-workshop.git
 cd carrito-workshop
-uv sync --locked
-uv run carrito doctor
-uv run carrito demo --mode fixture
-uv run jupyter lab
+uv sync --locked --extra langchain
 ```
 
-Abre [el notebook de la primera sesión](sessions/01_models/starter.ipynb) y selecciona el kernel de `.venv`. Sigue el [setup completo](docs/setup.md) si necesitas configurar una API o resolver un problema de instalación.
+Después, en cada sesión:
 
-El modo `fixture` utiliza respuestas preescritas del modelo y ejecuta código y herramientas reales. Funciona sin API y permite inspeccionar los mecanismos de la aplicación. El modo `live` llama al modelo configurado en `.env` y consume API. Las credenciales se guardan únicamente en local.
+1. Copia `.env.example` como `.env` (solo la primera vez).
+2. Pega la clave de la sesión en `OPENAI_API_KEY`.
+3. Comprueba la clave: `uv run carrito doctor`. Debe mostrar `"api": "OK"`.
+4. Abre Jupyter: `uv run jupyter lab`. Selecciona el kernel de `.venv`.
 
-## One project. Five sessions.
+Más detalle y solución de problemas: [setup](docs/setup.md).
 
-| Sesión | Qué construyes |
+## Cinco sesiones, un proyecto
+
+| Sesión | Qué construimos |
 |---|---|
 | [1 · Fundamentals of GenAI and LLMs](sessions/01_models/) | Una primera petición con evidencia, después de explorar tokens y generación |
 | [2 · Context Engineering and Working with LLMs](sessions/02_context/) | Contexto seleccionado, estado explícito y salidas con contrato |
 | [3 · Building with LangChain, RAG, and Tools](sessions/03_retrieval_tools/) | Retrieval medido, tools e integración MCP |
 | [4 · Designing Agents + Agentic Workflows](sessions/04_agents_state/) | Un agente con límites, confirmación y recuperación de errores |
-| [5 · Building a Custom Agent](sessions/05_capstone/) | Una configuración propia y una mejora comprobada con casos y trazas |
+| [5 · Building a Custom Agent](sessions/05_capstone/) | Un perfil propio y una mejora comprobada con casos y trazas |
 
-Trabaja individualmente o sigue la ejecución guiada en clase. Cada notebook arranca desde un checkpoint funcional: puedes continuar aunque no hayas terminado la sesión anterior. Completa las celdas `TODO`, revisa los checks `PENDIENTE` y conserva tus observaciones. Los [ejercicios de cada sesión](sessions/) explican qué comprobar y entregar.
+Cada notebook empieza desde datos preparados. No necesitas la sesión anterior.
 
-## Estructura
+## La tienda
+
+20 productos, 10 pedidos y seis políticas. Todos son ficticios.
+Cuatro tools: `search_products`, `get_order`, `search_policies` y `request_return`.
+`request_return` registra una solicitud local después de la confirmación del host. No hace compras, pagos ni reembolsos.
 
 ```text
-sessions/       notebooks y ejercicios
+sessions/       notebooks y guía de cada sesión
 src/carrito/    aplicación, contexto, retrieval, tools y agent loop
 data/           catálogo, pedidos, políticas y consultas de prueba
-evals/          casos de desarrollo y criterios de evaluación
-examples/       API, LangChain, MCP, Skills, traces y multimodalidad
-tests/          pruebas automatizadas del código
-docs/           setup, arquitectura y documentación técnica
-scripts/        comprobación del repositorio y notebooks
+evals/          casos de desarrollo y rúbrica
+examples/       LangChain, MCP, Skills, trazas y multimodalidad
+tests/          pruebas automáticas del código
+docs/           setup, arquitectura y fuentes
+scripts/        comprobación del repositorio y de los notebooks
 ```
 
-La tienda usa 20 productos, 10 pedidos y seis políticas ficticias. Sus cuatro tools son `search_products`, `get_order`, `search_policies` y `request_return`. La última registra una solicitud local tras confirmación del host; no realiza compras, pagos ni reembolsos.
+Más información: [arquitectura](docs/architecture.md), [ejemplos](examples/README.md), [evaluación](evals/README.md) y [fuentes](docs/references.md).
 
-Consulta la [arquitectura](docs/architecture.md), los [ejemplos ejecutables](examples/README.md), la [guía de evaluación](evals/README.md) y las [fuentes técnicas](docs/references.md).
+## Mantenimiento
 
-## Comprobar tu entorno y tus cambios
+Estos checks no llaman a la API y no necesitan clave:
 
 ```bash
 uv run ruff check .
 uv run pytest -q
-uv run carrito eval --split dev --mode fixture
-uv run carrito mcp-smoke
 uv run python scripts/check_notebooks.py
 uv run python scripts/check_student_repo.py
 ```
 
-La integración opcional con LangChain se instala con `uv sync --locked --extra langchain`. Sigue la [comparación de APIs](examples/langchain-comparison.md).
-
-Los checks offline verifican mecanismos y contratos de aplicación. No miden la calidad de un LLM. Revisa las respuestas y sus fuentes, separa datos de desarrollo de nuevas comprobaciones y registra el contexto de cada experimento.
+Los tests y los notebooks usan un cliente falso (`CARRITO_OFFLINE_CHECK=1`). Comprueban el código, no las respuestas del modelo. No uses esa variable en clase.
 
 ## Procedencia
 
-Código y datos propios. El entorno de comercio electrónico con tools y evals se inspira en [Cartwheel](https://github.com/ai-evals-course/cartwheel-homeworks). Consulta [las atribuciones](THIRD_PARTY_NOTICES.md).
+Código y datos propios. El entorno de comercio con tools y evals se inspira en [Cartwheel](https://github.com/ai-evals-course/cartwheel-homeworks). Consulta [las atribuciones](THIRD_PARTY_NOTICES.md).

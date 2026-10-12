@@ -9,6 +9,7 @@ import os
 
 from pydantic import ValidationError
 
+from carrito.model import load_settings, offline_check
 from carrito.store import create_store
 from carrito.tools import ProductArgs, StoreTools
 
@@ -43,14 +44,15 @@ def run_comparison(live=False, model=None, tools=None):
                 )
             ),
         ]
+        if live and offline_check():
+            live = False  # CI only: never call the API without a key.
         if model is None and live:
-            from dotenv import load_dotenv
             from langchain_openai import ChatOpenAI
 
-            load_dotenv()
+            load_settings()
             model_name = os.environ.get("OPENAI_MODEL")
             if not model_name:
-                raise ValueError("Set OPENAI_MODEL for an explicit live call.")
+                raise RuntimeError("Falta OPENAI_MODEL en .env.")
             model = ChatOpenAI(
                 model=model_name,
                 use_responses_api=True,

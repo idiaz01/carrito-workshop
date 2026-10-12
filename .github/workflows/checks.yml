@@ -1,5 +1,8 @@
 name: workshop-checks
 on: [push, pull_request]
+env:
+  # CI has no API key: a fake client replaces the API.
+  CARRITO_OFFLINE_CHECK: "1"
 jobs:
   offline:
     runs-on: ubuntu-latest
@@ -13,6 +16,7 @@ jobs:
       - run: uv run carrito eval --split dev --mode fixture
       - run: uv run python scripts/check_notebooks.py
       - run: uv run carrito mcp-smoke
+      - run: uv run carrito doctor
       - run: uv run python examples/learning_labs.py
 
   optional-langchain:

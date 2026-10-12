@@ -1,76 +1,87 @@
 # Arquitectura · Carrito
 
-Una aplicación pequeña para distinguir qué decide el modelo y qué controla el software. Cada componente tiene una responsabilidad explícita.
+Carrito es una aplicación pequeña. Su objetivo es separar dos cosas: qué decide el modelo y qué controla el software.
+
+## C4 · Nivel 1: contexto
 
 ```mermaid
-flowchart LR
-    U[Usuario] --> H[Host: contexto e identidad]
-    H --> M[Model API]
-    M -->|tool call| D[Dispatcher: schema y permisos]
-    D --> R[Catálogo y pedidos: SQLite]
-    D --> P[Políticas: retrieval local]
-    R -->|resultado| H
-    P -->|evidencia| H
-    H -->|respuesta| U
+C4Context
+    title Carrito · contexto del sistema
+    Person(user, "Usuario", "Pregunta por productos, pedidos y devoluciones")
+    System(carrito, "Carrito", "Asistente de tienda: host, agent loop y tools")
+    System_Ext(openai, "OpenAI Responses API", "Modelo de la sesión (OPENAI_MODEL)")
+    Rel(user, carrito, "Pregunta y confirma con /confirm")
+    Rel(carrito, openai, "Envía contexto y schemas de tools", "HTTPS")
+    Rel(openai, carrito, "Devuelve texto o function_call")
 ```
 
-El mismo catálogo se puede exponer mediante el MCP server de demostración. No cambia quién decide llamar a la tool ni quién aplica permisos.
+## C4 · Nivel 2: contenedores
+
+```mermaid
+C4Container
+    title Carrito · contenedores
+    Person(user, "Usuario")
+    System_Ext(openai, "OpenAI Responses API")
+    Container_Boundary(app, "Carrito (proceso local)") {
+        Container(host, "Host", "Python: cli.py, notebooks", "Fija identidad y confirma escrituras")
+        Container(loop, "Agent loop", "Python: agent.py, lab.py", "Llama al modelo y aplica límites")
+        Container(tools, "Tools", "Python: tools.py", "Valida schema y permisos; ejecuta")
+        ContainerDb(db, "SQLite", "store.py", "Productos, pedidos y solicitudes")
+        Container(rag, "Retrieval", "Python: retrieval.py", "Búsqueda léxica en 6 políticas")
+        Container(mcp, "MCP server", "stdio", "Expone solo el catálogo")
+    }
+    Rel(user, host, "Pregunta")
+    Rel(host, loop, "Contexto y perfil")
+    Rel(loop, openai, "Request")
+    Rel(loop, tools, "function_call")
+    Rel(tools, db, "Lee y escribe")
+    Rel(tools, rag, "search_policies")
+    Rel(mcp, db, "Lee catálogo")
+```
 
 ## Cuatro tools
 
-| Tool | Entrada elegida por el modelo | Resultado / efecto |
+| Tool | Entrada que elige el modelo | Resultado o efecto |
 |---|---|---|
-| `search_products` | query, presupuesto opcional en EUR | Productos locales, precio en céntimos |
-| `get_order` | order ID | Pedido del usuario activo o error sin datos ajenos |
+| `search_products` | query y presupuesto opcional en EUR | Productos locales, precio en céntimos |
+| `get_order` | ID de pedido | Pedido del usuario activo, o error sin datos ajenos |
 | `search_policies` | query | Documentos cortos con source IDs |
-| `request_return` | order ID y motivo | Propuesta pendiente o solicitud registrada tras confirmar |
+| `request_return` | ID de pedido y motivo | Propuesta pendiente, o solicitud registrada tras confirmar |
 
-`StoreTools` recibe la identidad desde el host. Los argumentos de una tool no pueden redefinirla. El dispatcher valida nombres y argumentos. El modelo no ejecuta Python arbitrario.
+El host fija la identidad. Los argumentos de una tool no pueden cambiarla.
+El dispatcher valida nombres y argumentos. El modelo no ejecuta Python.
 
 ## Confirmar una solicitud
 
-1. La tool comprueba propiedad del pedido y condiciones de la tienda ficticia.
-2. Si falta confirmación, prepara el pedido y motivo concretos; no escribe una solicitud.
-3. El host muestra ese contenido y recoge una confirmación explícita con `confirm_pending()`.
-4. La operación confirmada registra una solicitud. Si cambian pedido o motivo, se necesita otra confirmación.
-5. Repetir la solicitud registrada devuelve su resultado sin crear una segunda.
+1. La tool comprueba que el pedido es del usuario y cumple las reglas de la tienda.
+2. Sin confirmación, la tool prepara pedido y motivo. No escribe nada.
+3. El host muestra el payload. El usuario confirma con `confirm_pending()` (o `/confirm` en el chat).
+4. La tool registra la solicitud. Si cambian pedido o motivo, hace falta otra confirmación.
+5. Si se repite la solicitud, la tool devuelve la misma. No crea una segunda.
 
-Esta confirmación del usuario no representa una autorización administrativa para reembolsar. El taller no incluye dinero real, pagos ni cancelaciones. Las políticas sintéticas enseñan contratos de aplicación; no constituyen asesoramiento sobre derechos del consumidor.
+La confirmación no autoriza un reembolso. El taller no maneja dinero real.
 
-## Contexto, estado y observabilidad
+## Contexto, estado y trazas
 
-El historial contiene mensajes e items de respuesta de la API, incluidos los que hacen falta para continuar llamadas con tools. Las observations se asocian a su `call_id`. Al usar `store=False`, el adaptador solicita y conserva `reasoning.encrypted_content` para continuar con modelos de razonamiento sin estado en el servidor; es un campo opaco, no texto para interpretar. [Referencia oficial](https://developers.openai.com/api/docs/guides/reasoning). El loop termina por respuesta, aclaración o límite; los errores del modelo se hacen visibles.
+- **Historial:** mensajes e items de la API. Cada resultado de tool va con su `call_id`.
+- **`store=False`:** la API no guarda estado. El adaptador pide `reasoning.encrypted_content` para continuar con modelos de razonamiento. Es un campo opaco. [Referencia](https://developers.openai.com/api/docs/guides/reasoning).
+- **Estado de negocio:** SQLite. El historial y la confirmación pendiente viven solo en la sesión.
+- **Trazas JSONL:** llamadas, argumentos, resultados, usage, tiempos y motivo de salida.
+- **Fin del loop:** respuesta, aclaración o límite (pasos, tools o tokens). Si se para por un límite, cada llamada pendiente recibe un resultado de error sin ejecutarse.
 
-SQLite almacena productos, pedidos y solicitudes. Historial y confirmación pendiente pertenecen a la sesión. No hay memoria entre usuarios ni checkpoint durable del agent loop. El notebook comienza con datos preparados en memoria; una base con archivo permite mostrar persistencia de los efectos.
+## Piezas compartidas por los notebooks
 
-Las trazas JSONL contienen llamadas, argumentos, resultados, usage, tiempos y motivo de salida. La demo permite leerlas sin desplegar una plataforma de observabilidad. Las fixtures están etiquetadas y su usage no se presenta como consumo real de un modelo.
+| Pieza | Módulo | Uso |
+|---|---|---|
+| `ConversationState`, `compose_context`, `RecommendationContract` | `carrito.context` | S2: contexto y contrato |
+| `retrieve`, `retrieval_report` | `carrito.retrieval` | S3: retrieval medido |
+| `AgentProfile`, `run_profile`, `compare_contracts` | `carrito.lab` | S3–S5: el mismo agente con perfiles |
+| `live_check`, `explain_api_error` | `carrito.model` | Comprobar la clave y explicar errores |
+| `FixtureModel` | `carrito.model` | S4: forzar un loop o una tool no permitida |
 
-## Progresión y decisiones
+## Límites de esta arquitectura
 
-- S1: llamada y respuesta; cinco casos observados manualmente.
-- S2: contexto, salida estructurada y validación de hechos.
-- S3: retrieval medido en cuatro condiciones, tool roundtrip, MCP ejecutado y comparación LangChain.
-- S4: perfil del loop real, fallos controlados, recuperación explícita de preferencias y confirmación.
-- S5: perfil propio y Skills, diagnóstico, mejora del contrato, regresiones y revisión humana.
+Es una aplicación local de aprendizaje. Un servicio real necesita además: autenticación del host, persistencia concurrente, retención de trazas, límites de coste, recuperación de fallos y revisión humana de calidad.
+LangGraph, varios agentes y memoria a largo plazo quedan fuera. Solo hacen falta para problemas más complejos.
 
-La selección lexical de seis documentos cortos es deliberadamente sencilla. Embeddings y reranking se explican como alternativas, sin añadir otra infraestructura. LangGraph, agentes múltiples y memoria a largo plazo se reservan para problemas que necesiten esa complejidad.
-
-[Evals](../evals/README.md) · [Código](../src/carrito/)
-
-## Comparación de S3 y límites de producción
-
-`carrito.langchain_demo` reutiliza las funciones de retrieval y catálogo mediante `StructuredTool`, `bind_tools`, `AIMessage` y `ToolMessage`. Es un workflow de lectura con dos llamadas como máximo; el agente principal continúa usando el loop Python y la API nativa. El extra `langchain` es opcional. [Código y guía de comparación](../examples/langchain-comparison.md).
-
-Al detenerse por presupuesto de tools o tokens, el loop devuelve un resultado de error para cada llamada pendiente, sin ejecutarla. Así el siguiente turno conserva una continuación válida. Los tests también comprueban respuestas vacías, rechazos, outputs incompletos y errores de almacenamiento/modelo.
-
-Esta arquitectura es una aplicación local de aprendizaje. Para publicar un servicio real habría que definir autenticación del host, persistencia concurrente, control del historial, retención de trazas, límites/coste, recuperación de fallos y revisión humana de calidad. S5 enseña a identificar esas decisiones y a justificar una mejora con evidencia; no despliega un servicio de producción ni certifica su fiabilidad.
-
-## Configuración compartida por los notebooks
-
-`carrito.context` contiene `ConversationState`, `compose_context` y `RecommendationContract`. `carrito.lab.run_profile` los utiliza para construir el request que recibe `run_agent`. `AgentProfile` define objetivo, tools permitidas y límites; el host bloquea llamadas fuera del perfil aunque el modelo las emita.
-
-`StoreTools(..., policy_retriever=...)` recibe la estrategia de retrieval estudiada en S3. El notebook inyecta `partial(retrieve, chunks=load_chunks(), top_k=2, expand=True)` y ejecuta esa misma tool dentro del agente. El constructor de respuesta de S5 se aplica a los resultados observados, conservando `model_answer` y respuesta final separados.
-
-`save_state`/`load_state` recuperan preferencias tipadas. No conservan un agent loop ni sus aprobaciones. `recover_read` reintenta únicamente una lectura marcada como transitoria. Las métricas distinguen tiempos de modelo, tools y run; con fixtures no son un benchmark de inferencia.
-
-[Guía de experimentos, APIs y resultados](../examples/learning-labs.md).
+[Evaluación](../evals/README.md) · [Código](../src/carrito/)

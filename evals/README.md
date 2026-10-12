@@ -1,31 +1,32 @@
 # Evaluación pequeña y observable
 
-`uv run carrito eval --split dev --mode fixture` ejecuta 16 casos con SQLite nuevo por caso. Las tools y las comprobaciones se ejecutan de verdad; las llamadas del modelo son preescritas. Pasar esto comprueba mecanismos, **no calidad del modelo**. Una prueba de regresión inyecta IDs/precios erróneos y solicitudes para otro pedido: el checker falla.
+`uv run carrito eval` ejecuta 16 casos con el modelo de la sesión. Cada caso usa una SQLite nueva.
 
-`--mode live` usa el modelo de `OPENAI_MODEL`, ejecuta la pregunta y evalúa los resultados observados. Consume API. Los checks de tools/estado no comprueban por sí solos la respuesta final. El informe deja la revisión humana pendiente y las trazas contienen mensajes, outputs, usage, latencia y errores. Si un modelo pide aclaración en un caso que esperaba una tool, el check puede fallar: inspeccionar la traza antes de etiquetar el fallo.
+El checker lee dos cosas: las tools que se ejecutaron y el estado de SQLite. No lee la calidad del texto final. Para eso usamos la [rúbrica humana](rubrics.md).
 
-Los casos de escritura positiva simulan el clic del host después de obtener un payload pendiente. Ese seguimiento de host es determinista en ambos modos; no mide una segunda decisión autónoma del LLM. Comprueba ausencia de escritura antes de confirmar, payload exacto persistido e idempotencia. No hay ninguna tool de confirmación.
+Si el modelo pide una aclaración donde el caso esperaba una tool, el check puede fallar. Lee la traza antes de decidir si es un fallo real.
 
 ## Casos de desarrollo
 
-`dev.jsonl` contiene 16 escenarios públicos. Úsalos para diagnosticar el sistema y añade casos propios que comprueben comportamientos distintos. Mantén esas nuevas comprobaciones separadas durante el ajuste.
+`dev.jsonl` tiene 16 escenarios públicos. Cada línea tiene pregunta, expectativas y `fixture_calls`.
+El modelo no recibe las expectativas ni las `fixture_calls`. Las `fixture_calls` solo sirven para los tests sin API.
 
-Cada línea contiene pregunta, llamadas fixture preescritas y expectativas declaradas. En modo live no se entregan las llamadas ni expectativas al modelo. El checker lee salidas capturadas y estado SQLite. Nunca sustituye una respuesta real por el oráculo.
+En los casos de escritura, el host simula el clic de confirmación. El check comprueba tres cosas: no hay escritura antes de confirmar, el payload guardado es el exacto y solo existe una solicitud.
 
-## Qué revisar
+## Qué comprueba cada tipo de caso
 
-- Catálogo: IDs existentes, precios exactos en datos, presupuesto y candidato esperado.
-- Pedidos: propiedad del usuario fijado por el host; un pedido ajeno y uno ausente se ocultan igual.
-- Retrieval: presencia de fuente esperada; esto no demuestra grounding de la respuesta final.
-- Devolución: reglas de plazo/estado/excepciones, ausencia de escritura, confirmación del host, payload exacto y una sola solicitud.
-- Aclaración: check mínimo de no llamar tools sin datos y respuesta no vacía; la pertinencia se juzga con la rúbrica humana.
+- **Catálogo:** IDs existentes, precio exacto, presupuesto y candidato esperado.
+- **Pedidos:** el pedido es del usuario del host. Un pedido ajeno y uno inexistente dan el mismo error.
+- **Retrieval:** la fuente esperada aparece. Esto no prueba que la respuesta use bien la fuente.
+- **Devolución:** reglas de plazo, estado y excepciones; confirmación del host; una sola solicitud.
+- **Aclaración:** sin tools si faltan datos, y respuesta no vacía.
 
-Resultados por defecto en stdout; guardar con `> runtime/report.json`. Trazas en `runtime/evals`; `--trace-dir` permite comparar dos versiones sin sobrescribir. Misma fecha, usuario, modelo, casos y estado inicial en toda comparación. Registrar versión del prompt y modelo manualmente en la entrega.
+Las trazas se guardan en `runtime/evals`. Usa `--trace-dir` para comparar dos versiones.
+Para comparar, mantén iguales: modelo, casos, usuario, fecha de referencia y estado inicial.
 
-## Capstone: contrato del mismo runtime
+## S5: contrato de respuesta
 
-El notebook S5 usa `carrito.lab.compare_contracts(builder=improved_response, profile=profile)`: cuatro casos independientes ejecutan el agente real con llamadas preescritas, tools SQLite reales y el constructor del alumno. La comparación mide el contrato de aplicación, no calidad de lenguaje. `cases=[("bicicleta",100),("altavoz",60)]` permite comprobar consultas nuevas tras congelar el cambio.
+`compare_contracts(builder=improved_response, profile=profile, mode="live")` ejecuta cuatro casos con el agente real, antes y después de la mejora. Mide el contrato de la aplicación, no la calidad del lenguaje.
+`cases=[("bicicleta", 100), ("altavoz", 60)]` añade casos nuevos.
 
-`mode="live"` sustituye las decisiones preescritas por `OpenAIModel`; requiere API y consume coste. El checker conserva el mismo alcance y marca fallo si no se observa un contrato válido. Comparar el texto final y las decisiones exige revisión humana; la variabilidad del modelo puede introducir diferencias adicionales.
-
-Los 16 casos de desarrollo validan invariantes generales de backend y se reportan separados de los casos del contrato modificado. [Experimentos y límites](../examples/learning-labs.md).
+El backend (16 casos) y el contrato (casos de S5) se informan por separado.
