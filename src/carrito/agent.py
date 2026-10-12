@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from time import perf_counter
 
+from carrito.model import explain_api_error
 from carrito.skills import activate_skill
 from carrito.tools import tool_definitions
 
@@ -117,8 +118,9 @@ def run_agent(
             turn = model.respond(messages, definitions)
         except Exception as exc:
             # Do not put raw SDK exception bodies or credentials in traces.
-            emit({"type": "model_error", "error": type(exc).__name__, "step": step})
-            return finish("model_error", "No se pudo consultar el modelo.")
+            hint = explain_api_error(exc)
+            emit({"type": "model_error", "error": type(exc).__name__, "hint": hint, "step": step})
+            return finish("model_error", hint)
         total_tokens += turn.usage.get("input_tokens", 0) + turn.usage.get("output_tokens", 0)
         emit(
             {
