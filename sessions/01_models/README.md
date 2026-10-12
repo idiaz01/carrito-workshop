@@ -1,6 +1,6 @@
 # 1 · Fundamentos de LLMs: de tokens a una primera aplicación
 
-Tokens, generación y contexto. Después, una aplicación con una llamada al modelo y una primera evaluación de cinco casos.
+Qué hace un LLM, comprobado con tres experimentos reales. Después, una aplicación con una llamada al modelo y una primera evaluación de cinco casos.
 
 ## Antes de empezar
 
