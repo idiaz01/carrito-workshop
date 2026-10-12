@@ -1,7 +1,10 @@
 # Catálogo mediante MCP stdio
 
-Ejecutar `uv run carrito mcp-smoke`. El cliente inicia el proceso servidor, hace initialize, lista tools y llama search_products. El servidor solo expone el catálogo de lectura. La SDK MCP 2.x usa `MCPServer`; no se necesita Docker, puerto ni cuenta externa.
+Ejecuta `uv run carrito mcp-smoke`. El cliente inicia el proceso servidor, hace `initialize`, lista las tools y llama a `search_products`.
+El servidor solo expone el catálogo, en modo lectura. No necesita Docker, puertos ni cuentas externas.
 
-También: `uv run python examples/mcp/client.py`. `server.py` no es un chat interactivo: stdout queda reservado al protocolo JSON-RPC. La identidad y las devoluciones no se exponen aquí.
+También puedes ejecutar `uv run python examples/mcp/client.py`.
+`server.py` no es un chat: stdout está reservado para el protocolo JSON-RPC.
 
-MCP transporta y descubre herramientas; no define cuándo llamar al modelo. La Skill añade instrucciones; no es un protocolo de transporte.
+MCP transporta y descubre tools. No decide cuándo llamar al modelo.
+Una Skill añade instrucciones. No es un protocolo de transporte.

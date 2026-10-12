@@ -1,4 +1,4 @@
-"""Execute the five workshop notebooks in clean offline kernels."""
+"""Execute the five workshop notebooks with a fake API client (no key, no cost)."""
 
 import ast
 import os
@@ -13,21 +13,13 @@ from nbclient import NotebookClient
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def check_live_disabled(notebook, path):
-    assignments = []
+def check_no_live_switch(notebook, path):
+    """Students always run live: a RUN_LIVE switch must not come back."""
     for cell in notebook.cells:
-        if cell.cell_type != "code":
-            continue
-        tree = ast.parse(cell.source, filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id == "RUN_LIVE":
-                        assignments.append(node.value)
-    if not assignments or any(
-        not isinstance(value, ast.Constant) or value.value is not False for value in assignments
-    ):
-        raise ValueError(f"RUN_LIVE must remain explicitly False: {path}")
+        if cell.cell_type == "code":
+            tree = ast.parse(cell.source, filename=str(path))
+            if any(isinstance(node, ast.Name) and node.id == "RUN_LIVE" for node in ast.walk(tree)):
+                raise ValueError(f"RUN_LIVE switch found: {path}")
 
 
 def main():
@@ -38,7 +30,7 @@ def main():
     environment = dict(os.environ)
     environment.pop("OPENAI_API_KEY", None)
     environment.pop("OPENAI_ADMIN_KEY", None)
-    environment["CARRITO_NOTEBOOK_CHECK"] = "1"
+    environment["CARRITO_OFFLINE_CHECK"] = "1"
     environment["PATH"] = str(Path(sys.executable).parent) + os.pathsep + environment["PATH"]
     failures = []
     with tempfile.TemporaryDirectory(prefix="carrito-notebook-check-") as directory:
@@ -47,14 +39,12 @@ def main():
             try:
                 notebook = nbformat.read(path, as_version=4)
                 nbformat.validate(notebook)
-                check_live_disabled(notebook, path)
+                check_no_live_switch(notebook, path)
                 # Assertions added only to temporary executions, never student sources.
-                condition = "not all(COMPLETION.values())"
                 notebook.cells.append(
                     nbformat.v4.new_code_cell(
                         "assert COMPLETION, 'No behavior checks executed'\n"
-                        f"assert {condition}, 'Exercise completion contract failed'\n"
-                        "assert RUN_LIVE is False\n"
+                        "assert all(COMPLETION.values()), COMPLETION\n"
                     )
                 )
                 manager = KernelManager(kernel_name="python3")
@@ -82,8 +72,8 @@ def main():
             except Exception as exc:
                 failures.append(str(relative))
                 print(f"FAIL {relative}\n{exc}", file=sys.stderr, flush=True)
-    print(f"{len(paths) - len(failures)}/{len(paths)} notebooks executed in clean offline kernels.")
-    print("Checks cover exercise mechanics, not real LLM quality or written work.")
+    print(f"{len(paths) - len(failures)}/{len(paths)} notebooks executed with the offline client.")
+    print("Checks cover code mechanics, not real LLM answers.")
     return 1 if failures else 0
 
 

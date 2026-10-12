@@ -1,21 +1,23 @@
 # 1 · Fundamentos de LLMs: de tokens a una primera aplicación
 
-Fundamentos explicables, una función de mensajes, tres contrastes y cinco notas (tres propias y dos guiadas).
+Tokens, generación y contexto. Después, una aplicación con una llamada al modelo y una primera evaluación de cinco casos.
 
-## Empezar
+## Antes de empezar
 
-Desde la raíz del repositorio, ejecuta `uv sync --locked`, `uv run carrito doctor` y `uv run jupyter lab`. Abre [starter.ipynb](starter.ipynb) con el kernel de `.venv`.
+1. Pega la clave de hoy en `OPENAI_API_KEY` dentro de `.env`.
+2. Ejecuta `uv run carrito doctor`. Debe mostrar `"api": "OK"`.
+3. Ejecuta `uv run jupyter lab` y abre [starter.ipynb](starter.ipynb) con el kernel de `.venv`.
 
-El notebook carga un checkpoint funcional con datos de práctica. No depende de entregas anteriores. `RUN_LIVE = False` permite ejecutar los mecanismos sin API; activar llamadas reales requiere configurar `.env` y puede generar coste.
+Si algo falla, consulta la tabla de [setup](../../docs/setup.md#si-algo-falla).
 
-## Ejercicios y resultados
+## Cómo seguir la sesión
 
-Sigue [exercises.md](exercises.md). Completa las celdas `TODO`, vuelve a ejecutar los checks y registra qué cambió. `PENDIENTE` indica una parte que todavía no has completado.
+El docente ejecuta el notebook en pantalla. Ejecuta las mismas celdas en tu equipo.
+Antes de cada celda, predice el resultado. Después, compáralo.
+El código ya está completo. Las respuestas del modelo pueden variar entre equipos: es normal.
 
-Reinicia el kernel y ejecuta todo antes de entregar. Los checks automáticos verifican comportamientos concretos; acompáñalos con tus observaciones y revisión de las respuestas.
+La [guía de la sesión](exercises.md) resume qué observar en cada sección.
 
-## Alcance
+## Fuera de alcance
 
-Implementación de agent loops, frameworks de evals y pipelines multimodales.
-
-Las fixtures son respuestas preescritas. Sus resultados verifican mecanismos de aplicación y no miden calidad del LLM.
+Agent loops, frameworks de evals y pipelines multimodales.

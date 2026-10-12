@@ -14,7 +14,8 @@ def cli(*args, input=None):
 
 
 def test_doctor_and_demo(tmp_path):
-    assert cli("doctor").returncode == 0
+    doctor = cli("doctor")
+    assert doctor.returncode == 0 and '"api": "OK"' in doctor.stdout
     path = tmp_path / "trace.jsonl"
     demo = cli("demo", "--mode", "fixture", "--trace", str(path))
     assert demo.returncode == 0 and "P001" in demo.stdout
@@ -23,8 +24,9 @@ def test_doctor_and_demo(tmp_path):
 
 
 def test_cli_return_requires_explicit_host_flag():
-    assert '"return_count": 0' in cli("demo", "--scenario", "return").stdout
-    assert '"return_count": 1' in cli("demo", "--scenario", "return", "--confirm").stdout
+    fixture = ("demo", "--mode", "fixture", "--scenario", "return")
+    assert '"return_count": 0' in cli(*fixture).stdout
+    assert '"return_count": 1' in cli(*fixture, "--confirm").stdout
 
 
 def test_chat_host_confirmation_and_history():

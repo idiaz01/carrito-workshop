@@ -1,9 +1,14 @@
 # S1 · Qué está medido y qué es ilustrativo
 
-`tokenization.json` contiene tokenización medida de seis textos originales con **tiktoken 0.14.0 / cl100k_base**, el 20 de septiembre de 2026. Se obtuvieron IDs mediante `get_encoding(...).encode(text)` y piezas mediante `decode_single_token_bytes(id)`. No hubo inferencia, llamada API ni descarga de pesos de un modelo. La preparación leyó el vocabulario del tokenizer; el notebook solo lee este JSON y no requiere tiktoken instalado ni acceso a red.
+**Medido.** `tokenization.json` contiene la tokenización de seis textos con **tiktoken 0.14.0 / cl100k_base** (20 de septiembre de 2026).
+- IDs: `get_encoding(...).encode(text)`. Piezas: `decode_single_token_bytes(id)`.
+- `bytes_hex` reconstruye el texto completo. `display` facilita la lectura.
+- El tokenizer del modelo de la clase puede ser distinto. Los IDs no indican cercanía semántica.
 
-El nombre de la codificación está fijado: no se afirma que corresponda al modelo configurable de la clase. Un token puede ser un fragmento de palabra, puntuación, espacio o cifra. `bytes_hex` permite reconstruir el texto completo sin perder bytes; `display` facilita inspeccionarlo. Los IDs no representan cercanía semántica. Referencia: [repositorio oficial de tiktoken](https://github.com/openai/tiktoken).
+**Ilustrativo.** `carrito.foundations` tiene un **toy de ocho palabras** con logits escritos a mano.
+- Enseña probabilidad condicional y generación autoregresiva con «El pedido llega mañana».
+- La demo de temperatura normaliza `[2, 1, 0]` entre «mañana», «hoy» y «tarde».
+- No es un modelo entrenado. No predice entregas reales.
 
-`carrito.foundations` contiene un **toy de ocho palabras**, con logits manuales. Enseña probabilidad condicional y generación autoregresiva mediante «El pedido llega mañana». No es un modelo entrenado ni predice una entrega real. El experimento separado de temperatura normaliza `[2,1,0]` entre tres candidatos: mañana, hoy, tarde. Todos esos números son ilustrativos.
-
-`uv run python examples/foundations.py` muestra ambas demos offline. El notebook añade una atención causal escalar ilustrativa, objetivos de entrenamiento desplazados y el contraste de precio en contexto. Ninguna celda entrena pesos.
+`uv run python examples/foundations.py` muestra las dos demos sin API. Ninguna celda entrena pesos.
+Referencia: [tiktoken](https://github.com/openai/tiktoken).
