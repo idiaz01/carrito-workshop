@@ -9,8 +9,8 @@ Construimos un asistente de tienda online. El asistente consulta un catálogo, r
 
 ## Cómo funciona la clase
 
-El docente comparte pantalla y ejecuta cada notebook. Tú ejecutas las mismas celdas en tu equipo, al mismo tiempo.
-El código ya está completo. No tienes que escribir código ni entregar nada.
+El docente comparte pantalla y ejecuta cada paso. Tú lo ejecutas en tu equipo, al mismo tiempo.
+Desde la sesión 2 construyes tu propio agente en [`mi_agente/`](mi_agente/), paso a paso, a partir de su [`SPEC.md`](SPEC.md). No hay entregas.
 
 Cada sesión usa una clave de API nueva. El docente la comparte al inicio de la sesión.
 
@@ -38,7 +38,7 @@ Más detalle y solución de problemas: [setup](docs/setup.md).
 | Sesión                                                                      | Qué construimos                                                             |
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [1 · Fundamentals of GenAI and LLMs](sessions/01_models/)                   | Una primera petición con evidencia, después de explorar tokens y generación |
-| [2 · Context Engineering and Working with LLMs](sessions/02_context/)       | Contexto seleccionado, estado explícito y salidas con contrato              |
+| [2 · Context Engineering and Working with LLMs](sessions/02_context/)       | El contexto de tu agente: system prompt, tools, resultados y memoria        |
 | [3 · Building with LangChain, RAG, and Tools](sessions/03_retrieval_tools/) | Retrieval medido, tools e integración MCP                                   |
 | [4 · Designing Agents + Agentic Workflows](sessions/04_agents_state/)       | Un agente con límites, confirmación y recuperación de errores               |
 | [5 · Building a Custom Agent](sessions/05_capstone/)                        | Un perfil propio y una mejora comprobada con casos y trazas                 |
@@ -52,6 +52,8 @@ Cuatro tools: `search_products`, `get_order`, `search_policies` y `request_retur
 `request_return` registra una solicitud local después de la confirmación del host. No hace compras, pagos ni reembolsos.
 
 ```text
+SPEC.md         requisitos del asistente, con IDs
+mi_agente/      tu agente: lo construyes a partir de la sesión 2
 sessions/       notebooks y guía de cada sesión
 src/carrito/    aplicación, contexto, retrieval, tools y agent loop
 data/           catálogo, pedidos, políticas y consultas de prueba

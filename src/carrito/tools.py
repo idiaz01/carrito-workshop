@@ -54,7 +54,8 @@ DESCRIPTIONS = {
 }
 
 
-def tool_definitions() -> list[dict]:
+def tool_definitions(descriptions: dict | None = None) -> list[dict]:
+    """Native tool definitions. `descriptions` overrides the text the model reads."""
     definitions = []
     for name, schema in ARGUMENTS.items():
         parameters = schema.model_json_schema()
@@ -66,7 +67,7 @@ def tool_definitions() -> list[dict]:
             {
                 "type": "function",
                 "name": name,
-                "description": DESCRIPTIONS[name],
+                "description": (descriptions or {}).get(name) or DESCRIPTIONS[name],
                 "parameters": parameters,
                 "strict": True,
             }

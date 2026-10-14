@@ -43,7 +43,7 @@ def judge_demo(mode="fixture"):
                 model=model.model,
                 input=[
                     {
-                        "role": "developer",
+                        "role": "system",
                         "content": (
                             "Judge consistency with tool evidence. Requested is not refunded; "
                             "confirmation_required is not executed. Ambiguous success claims fail. "

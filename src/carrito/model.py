@@ -80,6 +80,63 @@ def explain_api_error(exc: Exception, detail: bool = False) -> str:
     return message
 
 
+# The course writes instructions with role "system" (common to most providers).
+# OpenAI also calls this level "developer". If a model rejects "system", retry once
+# with "developer" and keep using it for the rest of the process.
+_ROLE = {"developer": False}
+
+
+def _rejects_system_role(exc: Exception) -> bool:
+    if type(exc).__name__ != "BadRequestError":
+        return False
+    body = getattr(exc, "body", None)
+    text = ((body.get("message") if isinstance(body, dict) else None) or str(exc)).lower()
+    return "system" in text and "role" in text
+
+
+def _as_developer(items):
+    if not isinstance(items, list):
+        return items
+    return [
+        {**item, "role": "developer"}
+        if isinstance(item, dict) and item.get("role") == "system"
+        else item
+        for item in items
+    ]
+
+
+class _RoleFallbackResponses:
+    def __init__(self, inner):
+        self._inner = inner
+
+    def _call(self, method, **request):
+        if _ROLE["developer"]:
+            request["input"] = _as_developer(request.get("input"))
+        try:
+            return method(**request)
+        except Exception as exc:
+            if _ROLE["developer"] or not _rejects_system_role(exc):
+                raise
+            _ROLE["developer"] = True
+            request["input"] = _as_developer(request.get("input"))
+            return method(**request)
+
+    def create(self, **request):
+        return self._call(self._inner.create, **request)
+
+    def parse(self, **request):
+        return self._call(self._inner.parse, **request)
+
+
+class _RoleFallbackClient:
+    def __init__(self, inner):
+        self._inner = inner
+        self.responses = _RoleFallbackResponses(inner.responses)
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
+
+
 def make_client():
     if offline_check():
         from carrito.offline import OfflineClient
@@ -89,7 +146,7 @@ def make_client():
 
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("Falta OPENAI_API_KEY en .env. Pega la clave de la sesión y repite.")
-    return OpenAI()
+    return _RoleFallbackClient(OpenAI())
 
 
 class OpenAIModel:
@@ -237,7 +294,7 @@ def recommend_structured(
         model=adapter.model,
         input=[
             {
-                "role": "developer",
+                "role": "system",
                 "content": "Recommend only supplied product IDs; abstain if absent. Set mode=live.",
             },
             {

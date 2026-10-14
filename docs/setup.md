@@ -66,6 +66,8 @@ Un error de la API no indica un error en tu código. Lee el mensaje y aplica la 
 uv run carrito doctor        # comprueba datos, clave y modelo
 uv run carrito demo          # una pregunta al agente
 uv run carrito chat          # conversación con el agente; /confirm confirma, /quit sale
+uv run carrito agente --debug   # S2: tu agente (mi_agente/) y lo que ve el modelo
+uv run carrito casos         # S2: marcador de casos de tu agente
 uv run carrito mcp-smoke     # catálogo mediante un servidor MCP local
 uv run carrito skill-demo    # activación de la Skill de devoluciones
 uv run carrito judge-demo    # juez LLM frente a etiquetas humanas
