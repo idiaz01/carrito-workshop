@@ -31,17 +31,24 @@ def run_agent(
     system_prompt=None,
     allowed_tools=None,
     enable_skills=True,
+    tool_descriptions=None,
+    format_result=None,
 ):
+    """`tool_descriptions` and `format_result` let S2 students build the agent's context:
+    the text of each tool definition and what each tool result looks like for the model.
+    The trace always keeps the raw result."""
     if max_steps < 1 or max_tool_calls < 1 or max_total_tokens < 1:
         raise ValueError("Budgets must be positive")
     messages = (
         list(history)
         if history
-        else [{"role": "developer", "content": system_prompt or SYSTEM_PROMPT}]
+        else [{"role": "system", "content": system_prompt or SYSTEM_PROMPT}]
     )
     messages.append({"role": "user", "content": prompt})
     definitions = [
-        d for d in tool_definitions() if allowed_tools is None or d["name"] in allowed_tools
+        d
+        for d in tool_definitions(tool_descriptions)
+        if allowed_tools is None or d["name"] in allowed_tools
     ]
     events = []
     path = Path(trace_path) if trace_path else None
@@ -56,21 +63,29 @@ def run_agent(
                 handle.write(json.dumps(event, ensure_ascii=False) + "\n")
 
     def record_tool_result(call, result, latency_ms=0.0):
-        emit(
-            {
-                "type": "tool_result",
-                "name": call["name"],
-                "arguments": call["arguments"],
-                "call_id": call["call_id"],
-                "result": result,
-                "latency_ms": latency_ms,
-            }
+        output = (
+            format_result(call["name"], result)
+            if format_result
+            else json.dumps(result, ensure_ascii=False)
         )
+        if not isinstance(output, str):
+            output = json.dumps(output, ensure_ascii=False)
+        event = {
+            "type": "tool_result",
+            "name": call["name"],
+            "arguments": call["arguments"],
+            "call_id": call["call_id"],
+            "result": result,
+            "latency_ms": latency_ms,
+        }
+        if format_result:
+            event["model_sees"] = output
+        emit(event)
         messages.append(
             {
                 "type": "function_call_output",
                 "call_id": call["call_id"],
-                "output": json.dumps(result, ensure_ascii=False),
+                "output": output,
             }
         )
 
@@ -110,7 +125,7 @@ def run_agent(
     )
     skill = activate_skill(prompt) if enable_skills else None
     if skill:
-        messages.append({"role": "developer", "content": skill["content"]})
+        messages.append({"role": "system", "content": skill["content"]})
         emit({"type": "skill_activated", "name": skill["name"], "content": skill["content"]})
     for step in range(max_steps):
         started = perf_counter()

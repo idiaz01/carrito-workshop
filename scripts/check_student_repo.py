@@ -9,12 +9,14 @@ from urllib.parse import unquote
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = {
     "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "pyproject.toml", "uv.lock",
-    ".env.example", ".gitattributes", ".gitignore", ".python-version",
+    ".env.example", ".gitattributes", ".gitignore", ".python-version", "SPEC.md"}
+FOLDERS = {
+    "src", "tests", "data", "examples", "sessions", "evals", "docs", "scripts", ".github",
+    "mi_agente",
 }
-FOLDERS = {"src", "tests", "data", "examples", "sessions", "evals", "docs", "scripts", ".github"}
 DOCS = {"setup.md", "architecture.md", "references.md"}
 SCRIPTS = {"check_notebooks.py", "check_student_repo.py"}
-EVALS = {"README.md", "rubrics.md", "dev.jsonl"}
+EVALS = {"README.md", "rubrics.md", "dev.jsonl", "s2_casos.jsonl"}
 INTERNAL = re.compile(
     r"docs/(?:guiones|revision|research|output)|instructor-guide|evals/instructor|"
     r"solutions/|slides/|guion docente|guión docente|\bRUN_RESERVED\b|"

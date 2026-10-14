@@ -15,7 +15,7 @@ args = parser.parse_args()
 encoded = base64.b64encode(args.image.read_bytes()).decode()
 messages = [
     {
-        "role": "developer",
+        "role": "system",
         "content": (
             "Describe only visible evidence. "
             "Do not infer stock, warranty or battery life from a picture."

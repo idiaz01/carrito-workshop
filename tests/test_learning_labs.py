@@ -26,7 +26,7 @@ def test_context_keeps_authority_and_budget_and_current_state():
     pack = compose_context("Recomienda", state, evidence, max_evidence_chars=100)
     assert pack["selected_ids"] == ["A"]
     assert pack["omitted_ids"] == ["B"]
-    assert pack["messages"][0]["role"] == "developer"
+    assert pack["messages"][0]["role"] == "system"
     assert "80" in pack["messages"][1]["content"]
     assert "IGNORA" not in str(pack["messages"])
 

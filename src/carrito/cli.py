@@ -123,6 +123,60 @@ def chat(mode, trace_dir):
     tools.db.close()
 
 
+def mi_agente(debug, question, user):
+    """S2: chat with the agent built from mi_agente/. Edits apply on the next message."""
+    from carrito.student import StudentAgent, render_report
+
+    agent = StudentAgent(user_id=user)
+    turn = 0
+    print("Tu agente · mi_agente/. /reset empieza otra conversación; /salir sale.")
+    try:
+        while True:
+            if question is not None:
+                prompt = question
+            else:
+                try:
+                    prompt = input("Tú> ").strip()
+                except EOFError:
+                    break
+            if prompt in {"/salir", "/quit"}:
+                break
+            if prompt == "/reset":
+                agent.close()
+                agent = StudentAgent(user_id=user)
+                turn = 0
+                print("Conversación nueva.")
+                continue
+            if not prompt:
+                continue
+            turn += 1
+            result = agent.ask(prompt)
+            if debug:
+                print(render_report(result["report"], turn))
+            print(f"Carrito> {result['answer']}\n")
+            if question is not None:
+                break
+    finally:
+        agent.close()
+
+
+def casos(debug, only):
+    """S2 scoreboard: more cases passed with fewer tokens."""
+    from carrito.cases import render_table, run_cases, save_report
+    from carrito.student import render_report
+
+    def on_turn(case, turn, text, result):
+        print(f"[{case['id']}·{turn}] Tú> {text}")
+        if debug:
+            print(render_report(result["report"], turn))
+        print(f"        Carrito> {result['answer'][:300]}\n")
+
+    report = run_cases(only=only, on_turn=on_turn)
+    print(render_table(report))
+    saved = save_report(report)
+    print(f"Guardado en runtime/casos/{saved.name} (y runtime/casos/ultimo.json)")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Carrito · taller local")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -137,6 +191,13 @@ def main():
     conversation = sub.add_parser("chat")
     conversation.add_argument("--mode", choices=["fixture", "live"], default="live")
     conversation.add_argument("--trace-dir", type=Path, default=Path("runtime/chat"))
+    agente = sub.add_parser("agente", help="S2: habla con tu agente (mi_agente/)")
+    agente.add_argument("--debug", action="store_true", help="muestra lo que ve el modelo")
+    agente.add_argument("--pregunta", help="una sola pregunta y sale")
+    agente.add_argument("--user", choices=["user1", "user2"], default="user1")
+    cases = sub.add_parser("casos", help="S2: marcador de casos de tu agente")
+    cases.add_argument("--debug", action="store_true")
+    cases.add_argument("--caso", action="append", help="ejecuta solo este caso (C1...)")
     evaluate = sub.add_parser("eval")
     evaluate.add_argument("--split", choices=["dev"], default="dev")
     evaluate.add_argument("--mode", choices=["fixture", "live"], default="live")
@@ -177,6 +238,10 @@ def main():
             raise SystemExit(1)
     elif args.command == "chat":
         chat(args.mode, args.trace_dir)
+    elif args.command == "agente":
+        mi_agente(args.debug, args.pregunta, args.user)
+    elif args.command == "casos":
+        casos(args.debug, args.caso)
     elif args.command == "eval":
         report = run_evals(args.split, args.mode, args.trace_dir)
         show(report)
