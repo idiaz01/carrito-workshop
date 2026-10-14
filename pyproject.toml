@@ -33,4 +33,4 @@ extend-exclude = ["slides"]
 select = ["E", "F", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"*.ipynb" = ["E402", "E501"]
+"*.ipynb" = ["E402", "E501", "F841"]  # F841: lab cells start incomplete

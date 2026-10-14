@@ -1,19 +1,21 @@
 # 2 · Guía de la sesión
 
-Qué observar en cada sección del [notebook](starter.ipynb). Método: predice → ejecuta → compara → explica.
+Método: predice → ejecuta → compara → explica.
 
-| Sección | Qué observar |
-|---|---|
-| Anatomía y autoridad | Instrucciones, petición, estado y evidencia. `source_id` permite citar, no da autoridad |
-| Experimento controlado | Solo cambia el presupuesto de evidencia. El anuncio marcado como relevante entra: seleccionar contexto no neutraliza la prompt injection |
-| Contrato de respuesta | Un JSON válido no comprueba precio ni pertinencia. Mira el ID inventado y el producto fuera de presupuesto |
-| Structured Outputs | Tres variantes con el mismo modelo y schema. ¿Qué cambia en la respuesta? ¿Qué pasa si `output_parsed` es `None`? |
-| Selección y conversación | La corrección 80 → 60 cambia solo el presupuesto. Compara estado anterior, actualizado y perdido |
+| Sección | Lab ✏️ | Qué debes conseguir |
+|---|---|---|
+| 1 · Anatomía de una petición | Lab 1 · Origen y autoridad | Decir quién escribe cada pieza y quién puede dar acceso a datos |
+| 2 · Seleccionar evidencia | Lab 2 · Elige la evidencia | Elegir la evidencia útil con un presupuesto de 250 caracteres |
+| 3 · Contrato de respuesta | Lab 3 · Reglas de negocio | Escribir dos reglas: IDs conocidos y presupuesto |
+| 3 · Contrato de respuesta | Lab 3b · Engaña al validador | Escribir un JSON válido con una explicación falsa |
+| 4 · Conversación y estado | Lab 4 · Actualiza el estado | Cambiar el presupuesto sin perder categoría ni preferencias |
+| 5 · Reto final | Lab 5 | Estado + evidencia + contrato + validación + revisión humana, en un caso nuevo |
 
 ## Debes poder explicar
 
-- History, state y memory.
-- Schema y verdad.
-- Autoridad y contenido.
+- Origen y autoridad: un documento aporta datos, no permisos.
+- Selección: más contexto no es mejor contexto.
+- Schema y verdad: un JSON válido puede contener una mala decisión.
+- Historial y estado: el estado explícito conserva lo que decide.
 
-Los checks `OK` comprueban el código. No miden la calidad del modelo.
+Los checks comprueban el código. No miden la calidad del modelo.

@@ -1,6 +1,6 @@
 # 2 · Context Engineering and Working with LLMs
 
-Contexto seleccionado, estado actualizado, salida con schema y contrato de negocio.
+Qué entra en el modelo (origen, autoridad, selección y estado) y cómo comprobar lo que sale (contrato y reglas).
 
 ## Antes de empezar
 
@@ -12,11 +12,14 @@ Si algo falla, consulta la tabla de [setup](../../docs/setup.md#si-algo-falla).
 
 ## Cómo seguir la sesión
 
-El docente ejecuta el notebook en pantalla. Ejecuta las mismas celdas en tu equipo.
-Antes de cada celda, predice el resultado. Después, compáralo.
-El código ya está completo. Las respuestas del modelo pueden variar entre equipos: es normal.
+- 🖥️ **Demo:** el docente ejecuta en pantalla. Tú ejecutas la misma celda. Antes, predice el resultado.
+- ✏️ **Tu turno:** completa los `...` de la celda. En el aula, por parejas.
+- ✅ **Comprueba:** la celda de check dice `✅ OK` o `✏️ PENDIENTE`, con una pista.
 
-La [guía de la sesión](exercises.md) resume qué observar en cada sección.
+Después de cada lab, el docente enseña una solución. Si no terminas un lab, las celdas siguientes funcionan igual.
+Las respuestas del modelo pueden variar entre equipos: es normal.
+
+La [guía de la sesión](exercises.md) resume cada lab.
 
 ## Fuera de alcance
 
