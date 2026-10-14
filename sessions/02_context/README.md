@@ -14,7 +14,7 @@ Si algo falla, consulta la tabla de [setup](../../docs/setup.md#si-algo-falla).
 ## Cómo trabajas hoy
 
 Tu agente vive en [`mi_agente/`](../../mi_agente/). Sus requisitos están en [`SPEC.md`](../../SPEC.md).
-El docente explica cada paso y lo hace en pantalla. Después, lo haces tú (en el aula, por parejas).
+El docente explica cada paso y lo hace en pantalla. Después, lo haces tú en tu equipo.
 
 ```bash
 uv run carrito agente --debug                        # habla con tu agente y mira lo que ve el modelo
