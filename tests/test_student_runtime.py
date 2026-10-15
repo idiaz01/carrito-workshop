@@ -54,6 +54,21 @@ def test_cases_runner_and_checks():
     json.dumps(report)
 
 
+def test_reto_adds_four_cases_and_caso_finds_them():
+    from carrito.cases import RETO, load_cases
+
+    reto = load_cases(RETO)
+    assert [c["id"] for c in reto] == ["C9", "C10", "C11", "C12"]
+    base = {c["id"] for c in load_cases()}
+    assert base.isdisjoint(c["id"] for c in reto)
+    report = run_cases(model_factory=lambda: FixtureModel([[]], final_text="Hola"), only=["C11"])
+    assert [r["id"] for r in report["cases"]] == ["C11"]
+    assert report["passed"] == 0  # no pregunta el presupuesto
+    ok = "¿Cuál es tu presupuesto?"
+    report = run_cases(model_factory=lambda: FixtureModel([[]], final_text=ok), only=["C11"])
+    assert report["passed"] == 1
+
+
 def test_compare_last_two_scoreboards(tmp_path):
     assert last_two_reports(tmp_path) is None
 

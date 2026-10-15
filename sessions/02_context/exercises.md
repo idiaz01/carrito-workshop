@@ -8,7 +8,13 @@ Método: cambia **una** pieza → prueba en `carrito agente --debug` → mide co
 | 2 | `mi_agente/tools.md` | Descripciones: qué hace, cuándo sí, cuándo no, unidades, resultado | DAT-1, ACL-1, ESC-1 | `-k paso2` |
 | 3 | `mi_agente/contexto.py` | `format_tool_result`: solo los campos útiles, precios en euros | DAT-2, RESP-1, RESP-2, RESP-3 | `-k paso3` |
 | 4 | `mi_agente/contexto.py` | `update_state` (escribir) y `build_history` (comprimir) | Caso C8 | `-k paso4` |
-| Reto | Cualquiera | Más casos con menos tokens | Todos | `carrito casos --comparar` |
+| Reto | Cualquiera | Más casos de los 12 con menos tokens | Todos | `carrito casos --reto` y `--comparar` |
+
+## Reto
+
+Con los cuatro pasos, los 8 casos pasan. El reto añade 4 casos nuevos: `uv run carrito casos --reto`.
+Gana quien pase más casos de los 12. Si hay empate, gana quien use menos tokens.
+Lee también las respuestas: un ✅ no garantiza una buena respuesta.
 
 ## Debes poder explicar
 

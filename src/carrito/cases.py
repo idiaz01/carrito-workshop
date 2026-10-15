@@ -7,6 +7,7 @@ from pathlib import Path
 from carrito.student import ROOT, StudentAgent
 
 CASES = ROOT / "evals" / "s2_casos.jsonl"
+RETO = ROOT / "evals" / "s2_reto.jsonl"
 RESULTS = ROOT / "runtime" / "casos"
 
 
@@ -41,10 +42,16 @@ def check_case(case, answer, tools_called):
     return failures
 
 
-def run_cases(model_factory=None, only=None, on_turn=None):
-    """Each case starts a fresh conversation and a fresh store."""
+def run_cases(model_factory=None, only=None, on_turn=None, reto=False):
+    """Each case starts a fresh conversation and a fresh store.
+
+    reto=True adds the challenge cases (C9...). --caso finds a case in both files.
+    """
+    cases = load_cases()
+    if reto or only:
+        cases += load_cases(RETO)
     rows = []
-    for case in load_cases():
+    for case in cases:
         if only and case["id"] not in only:
             continue
         agent = StudentAgent(model=model_factory() if model_factory else None, warn=lambda m: None)
