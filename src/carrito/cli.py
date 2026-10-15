@@ -160,7 +160,7 @@ def mi_agente(debug, question, user):
         agent.close()
 
 
-def casos(debug, only, compare=False):
+def casos(debug, only, compare=False, reto=False):
     """S2 scoreboard: more cases passed with fewer tokens."""
     from carrito.cases import (
         last_two_reports,
@@ -185,7 +185,7 @@ def casos(debug, only, compare=False):
             print(render_report(result["report"], turn))
         print(f"        Carrito> {result['answer'][:300]}\n")
 
-    report = run_cases(only=only, on_turn=on_turn)
+    report = run_cases(only=only, on_turn=on_turn, reto=reto)
     print(render_table(report))
     saved = save_report(report)
     print(f"Guardado en runtime/casos/{saved.name} (y runtime/casos/ultimo.json)")
@@ -215,6 +215,7 @@ def main():
     cases.add_argument(
         "--comparar", action="store_true", help="compara las dos últimas ejecuciones"
     )
+    cases.add_argument("--reto", action="store_true", help="añade los casos del reto (C9-C12)")
     evaluate = sub.add_parser("eval")
     evaluate.add_argument("--split", choices=["dev"], default="dev")
     evaluate.add_argument("--mode", choices=["fixture", "live"], default="live")
@@ -258,7 +259,7 @@ def main():
     elif args.command == "agente":
         mi_agente(args.debug, args.pregunta, args.user)
     elif args.command == "casos":
-        casos(args.debug, args.caso, args.comparar)
+        casos(args.debug, args.caso, args.comparar, args.reto)
     elif args.command == "eval":
         report = run_evals(args.split, args.mode, args.trace_dir)
         show(report)

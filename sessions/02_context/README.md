@@ -21,6 +21,7 @@ Hoy trabajas con archivos y con la terminal. No usas notebook en clase.
 uv run carrito agente --debug                        # habla con tu agente y mira lo que ve el modelo
 uv run carrito casos                                 # marcador: 8 casos del SPEC
 uv run carrito casos --comparar                      # antes y después: las dos últimas ejecuciones
+uv run carrito casos --reto                          # reto: 8 casos + 4 casos nuevos (C9-C12)
 uv run pytest tests/test_mi_agente.py --runxfail -q  # tus pasos: FAILED → PASSED
 ```
 
