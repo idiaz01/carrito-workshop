@@ -160,10 +160,24 @@ def mi_agente(debug, question, user):
         agent.close()
 
 
-def casos(debug, only):
+def casos(debug, only, compare=False):
     """S2 scoreboard: more cases passed with fewer tokens."""
-    from carrito.cases import render_table, run_cases, save_report
+    from carrito.cases import (
+        last_two_reports,
+        render_comparison,
+        render_table,
+        run_cases,
+        save_report,
+    )
     from carrito.student import render_report
+
+    if compare:
+        pair = last_two_reports()
+        if pair is None:
+            print("Necesitas al menos dos ejecuciones de `carrito casos` para comparar.")
+            return
+        print(render_comparison(*pair))
+        return
 
     def on_turn(case, turn, text, result):
         print(f"[{case['id']}·{turn}] Tú> {text}")
@@ -198,6 +212,9 @@ def main():
     cases = sub.add_parser("casos", help="S2: marcador de casos de tu agente")
     cases.add_argument("--debug", action="store_true")
     cases.add_argument("--caso", action="append", help="ejecuta solo este caso (C1...)")
+    cases.add_argument(
+        "--comparar", action="store_true", help="compara las dos últimas ejecuciones"
+    )
     evaluate = sub.add_parser("eval")
     evaluate.add_argument("--split", choices=["dev"], default="dev")
     evaluate.add_argument("--mode", choices=["fixture", "live"], default="live")
@@ -241,7 +258,7 @@ def main():
     elif args.command == "agente":
         mi_agente(args.debug, args.pregunta, args.user)
     elif args.command == "casos":
-        casos(args.debug, args.caso)
+        casos(args.debug, args.caso, args.comparar)
     elif args.command == "eval":
         report = run_evals(args.split, args.mode, args.trace_dir)
         show(report)
@@ -260,9 +277,7 @@ def main():
         for prompt in ["Busco auriculares", "Quiero devolver un pedido"]:
             show({"prompt": prompt, "activation": activate_skill(prompt)})
         show(
-            run_agent(
-                PROMPTS["return"], StoreTools(create_store()), model_for(args.mode, "return")
-            )
+            run_agent(PROMPTS["return"], StoreTools(create_store()), model_for(args.mode, "return"))
         )
     elif args.command == "judge-demo":
         show(judge_demo(args.mode))

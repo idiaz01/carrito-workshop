@@ -1,7 +1,7 @@
 import json
 
 import carrito.student as student
-from carrito.cases import check_case, run_cases
+from carrito.cases import check_case, last_two_reports, render_comparison, run_cases
 from carrito.model import FixtureModel
 
 
@@ -52,6 +52,27 @@ def test_cases_runner_and_checks():
     report = run_cases(model_factory=lambda: FixtureModel([[]], final_text="Hola"), only=["C6"])
     assert report["total"] == 1 and report["passed"] == 1
     json.dumps(report)
+
+
+def test_compare_last_two_scoreboards(tmp_path):
+    assert last_two_reports(tmp_path) is None
+
+    def board(passed_c1, tokens):
+        rows = [
+            {"id": "C1", "spec": "DAT-2", "passed": passed_c1},
+            {"id": "C6", "spec": "ALC-1", "passed": True},
+        ]
+        return {"passed": 1 + passed_c1, "total": 2, "tokens": tokens, "cases": rows}
+
+    (tmp_path / "20261015-100000.json").write_text(json.dumps(board(False, 9000)))
+    (tmp_path / "20261015-110000.json").write_text(json.dumps(board(True, 4000)))
+    (tmp_path / "ultimo.json").write_text("{}")
+    pair = last_two_reports(tmp_path)
+    assert [name for name, _ in pair] == ["20261015-100000.json", "20261015-110000.json"]
+    text = render_comparison(*pair)
+    assert "Antes:   1/2 casos · 9000 tokens" in text
+    assert "Después: 2/2 casos · 4000 tokens" in text
+    assert "C1   ❌ → ✅" in text and "C6" not in text
 
 
 def test_system_role_falls_back_to_developer_once():

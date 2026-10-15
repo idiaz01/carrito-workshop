@@ -99,3 +99,31 @@ def render_table(report):
         f"\nMARCADOR: {report['passed']}/{report['total']} casos · {report['tokens']} tokens"
     )
     return "\n".join(lines)
+
+
+def last_two_reports(results=RESULTS):
+    """The two most recent scoreboards saved in runtime/casos/ (oldest first)."""
+    files = sorted(Path(results).glob("2*.json"))
+    if len(files) < 2:
+        return None
+    return [(f.name, json.loads(f.read_text())) for f in files[-2:]]
+
+
+def render_comparison(before, after):
+    """Before/after view of two scoreboards: score, tokens and the cases that changed."""
+    (name_a, a), (name_b, b) = before, after
+    lines = [
+        f"Antes:   {a['passed']}/{a['total']} casos · {a['tokens']} tokens  ({name_a})",
+        f"Después: {b['passed']}/{b['total']} casos · {b['tokens']} tokens  ({name_b})",
+    ]
+    old = {row["id"]: row for row in a["cases"]}
+    changes = []
+    for row in b["cases"]:
+        prev = old.get(row["id"])
+        if prev is None or prev["passed"] == row["passed"]:
+            continue
+        arrow = "❌ → ✅" if row["passed"] else "✅ → ❌"
+        changes.append(f"  {row['id']:<4} {arrow}  {row['spec']}")
+    lines.append("Casos que cambian:" if changes else "Ningún caso cambia de resultado.")
+    lines.extend(changes)
+    return "\n".join(lines)
