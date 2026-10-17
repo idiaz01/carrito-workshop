@@ -10,6 +10,7 @@ Después, compara las dos trazas en LangSmith.
 
 import json
 import os
+import threading
 
 from carrito.model import load_settings
 from carrito.student import (
@@ -28,10 +29,12 @@ def build_tools(helper, descriptions):
     module = load_student_module()  # tu contexto.py (format_tool_result)
     extra = helper._configure_tools(descriptions)
     schemas = {**ARGUMENTS, **{name: EXTRA_ARGUMENTS[name] for name in extra}}
+    lock = threading.Lock()  # LangChain puede ejecutar dos tools a la vez, en otros hilos
 
     def make_tool(name, schema):
         def run(**arguments):
-            result = helper.tools.dispatch(name, arguments)  # misma tool, mismos permisos
+            with lock:
+                result = helper.tools.dispatch(name, arguments)  # misma tool, mismos permisos
             try:
                 return module.format_tool_result(name, result)  # lo que ve el modelo
             except Exception:  # noqa: BLE001 - sin tu función, el resultado completo

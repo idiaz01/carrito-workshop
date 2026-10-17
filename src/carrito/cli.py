@@ -129,9 +129,10 @@ def chat(mode, trace_dir):
 def mi_agente_langchain(debug, question, user):
     """S3 · Lab 4: the same mi_agente/, with LangChain's loop."""
     from carrito.langchain_agente import ask, build_agent
+    from carrito.student import FOLDER
 
     agent, helper = build_agent(user)
-    print("Tu agente con LangChain · mi_agente/. /salir sale.")
+    print(f"Tu agente con LangChain · {FOLDER.name}/. /salir sale.")
     while True:
         if question is not None:
             prompt = question
