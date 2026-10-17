@@ -8,6 +8,8 @@ from carrito.student import ROOT, StudentAgent
 
 CASES = ROOT / "evals" / "s2_casos.jsonl"
 RETO = ROOT / "evals" / "s2_reto.jsonl"
+# The scoreboard of each session. S2 also has its reto (C9-C12).
+SESSIONS = {2: [CASES], 3: [ROOT / "evals" / "s3_casos.jsonl"]}
 RESULTS = ROOT / "runtime" / "casos"
 
 
@@ -42,14 +44,21 @@ def check_case(case, answer, tools_called):
     return failures
 
 
-def run_cases(model_factory=None, only=None, on_turn=None, reto=False):
+def all_case_files():
+    return [CASES, RETO] + [f for s, files in SESSIONS.items() if s != 2 for f in files]
+
+
+def run_cases(model_factory=None, only=None, on_turn=None, reto=False, sesion=2, todos=False):
     """Each case starts a fresh conversation and a fresh store.
 
-    reto=True adds the challenge cases (C9...). --caso finds a case in both files.
+    sesion picks the scoreboard (2, 3...). reto=True adds the S2 challenge (C9-C12).
+    todos=True runs every case of every session. --caso finds a case in any file.
     """
-    cases = load_cases()
-    if reto or only:
-        cases += load_cases(RETO)
+    if only or todos:
+        files = all_case_files()
+    else:
+        files = list(SESSIONS[sesion]) + ([RETO] if reto and sesion == 2 else [])
+    cases = [case for path in files if path.exists() for case in load_cases(path)]
     rows = []
     for case in cases:
         if only and case["id"] not in only:

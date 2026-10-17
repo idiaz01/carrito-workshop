@@ -7,7 +7,7 @@ Necesitas Python 3.13, Git y [uv](https://docs.astral.sh/uv/getting-started/inst
 ```bash
 git clone https://github.com/idiaz01/carrito-workshop.git
 cd carrito-workshop
-uv sync --locked --extra langchain
+uv sync --locked
 ```
 
 `uv` instala la versión de Python de `.python-version` y las dependencias de `uv.lock`. Este paso necesita red.
@@ -34,7 +34,25 @@ OPENAI_MODEL=gpt-6-luna
 
 No pegues la clave en un notebook. No la compartas fuera del curso. La clave caduca al final de la sesión.
 
-## 3. Abrir el notebook
+## 3. LangSmith (desde la sesión 3)
+
+Cada persona usa su propia cuenta gratuita de LangSmith (plan Developer).
+
+1. Entra en [smith.langchain.com](https://smith.langchain.com) y crea la cuenta.
+2. En «Settings → API Keys», crea una clave personal.
+3. En `.env`, añade estas líneas (están en `.env.example`):
+
+```text
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=<tu clave de LangSmith>
+LANGSMITH_PROJECT=carrito
+```
+
+4. Ejecuta `uv run carrito doctor`. En `trazas` debe mostrar `"langsmith": "OK"`.
+
+Tu clave de LangSmith es tuya: no caduca con la sesión. No la compartas.
+
+## 4. Abrir el notebook (opcional)
 
 ```bash
 uv run jupyter lab
@@ -54,8 +72,10 @@ Los notebooks leen `.env` en cada llamada. Si cambias la clave, repite la celda.
 | `El modelo de OPENAI_MODEL no existe` | Copia la línea `OPENAI_MODEL` de `.env.example` |
 | `Límite de uso alcanzado` | Espera un minuto y repite. Si sigue, avisa al docente |
 | `No hay conexión con la API` | Revisa la red y repite |
-| `ModuleNotFoundError: carrito` | Ejecuta `uv sync --locked --extra langchain` desde la raíz y elige el kernel de `.venv` |
-| `Falta LangChain` (S3) | Ejecuta `uv sync --locked --extra langchain` |
+| `ModuleNotFoundError: carrito` | Ejecuta `uv sync --locked` desde la raíz y elige el kernel de `.venv` |
+| `Falta LangChain` (S3) | Ejecuta `uv sync --locked` |
+| `"langsmith": "apagado"` | Pon `LANGSMITH_TRACING=true` en `.env` |
+| `La clave de LangSmith falla` | Crea otra clave en LangSmith y pégala en `LANGSMITH_API_KEY` |
 | Estado inesperado en el notebook | Reinicia el kernel y ejecuta desde el principio |
 
 Un error de la API no indica un error en tu código. Lee el mensaje y aplica la acción de la tabla.

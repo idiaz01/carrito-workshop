@@ -1,0 +1,12 @@
+{"id": "R1", "pregunta": "¿Cuánto cuesta enviar un pedido a Canarias?", "fuentes": ["AYU-ENV"], "clave": "14,95"}
+{"id": "R2", "pregunta": "¿Me podéis mandar la Batería Faro a Tenerife?", "fuentes": ["AYU-ENV"], "clave": "no enviamos baterías"}
+{"id": "R3", "pregunta": "¿Cuánto tardáis en devolverme el dinero de una devolución?", "fuentes": ["AYU-DEV"], "clave": "entre 5 y 10 días"}
+{"id": "R4", "pregunta": "¿Puedo pagar cuando me llegue el paquete a casa?", "fuentes": ["AYU-PAG"], "clave": "contra reembolso"}
+{"id": "R5", "pregunta": "¿Cuántos años de garantía tiene la Batería Faro?", "fuentes": ["AYU-FAR", "AYU-GAR"], "clave": "1 año"}
+{"id": "R6", "pregunta": "¿Puedo subir al avión con una batería externa?", "fuentes": ["AYU-FAR"], "clave": "equipaje de mano"}
+{"id": "R7", "pregunta": "Se me ha olvidado la clave para entrar en mi cuenta", "fuentes": ["AYU-CUE"], "clave": "olvidas la contraseña"}
+{"id": "R8", "pregunta": "¿La taza personalizada se puede calentar en el microondas?", "fuentes": ["AYU-TAZ"], "clave": "microondas"}
+{"id": "R9", "pregunta": "¿Cuántos días tengo para devolver un producto?", "fuentes": ["AYU-DEV", "POL-DEV"], "clave": "30 días"}
+{"id": "R10", "pregunta": "¿Puedo juntar dos códigos de descuento en la misma compra?", "fuentes": ["AYU-CUP"], "clave": "no se acumulan"}
+{"id": "R11", "pregunta": "Mis auriculares no conectan con el móvil, ¿qué hago?", "fuentes": ["AYU-NUB"], "clave": "apágalos"}
+{"id": "R12", "pregunta": "Si me regalan algo y no me gusta, ¿me devolvéis el dinero?", "fuentes": ["AYU-REG"], "clave": "como un cupón"}

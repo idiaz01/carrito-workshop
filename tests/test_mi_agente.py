@@ -8,7 +8,12 @@ import json
 
 import pytest
 
-from carrito.student import load_student_module, system_prompt_status, tool_descriptions_status
+from carrito.student import (
+    load_rag_config,
+    load_student_module,
+    system_prompt_status,
+    tool_descriptions_status,
+)
 
 TODO = pytest.mark.xfail(raises=NotImplementedError, reason="paso pendiente", strict=False)
 
@@ -52,7 +57,10 @@ def test_paso3_products_in_euros_without_internal_fields():
 def test_paso3_policies_keep_two_documents_and_errors_pass():
     module = load_student_module()
     text = module.format_tool_result("search_policies", POLICIES)
-    assert "POL-0" in text and "POL-1" in text and "POL-2" not in text
+    assert "POL-0" in text and "POL-1" in text
+    # S2: at most two documents. From S3 on, rag.toml (top_k) decides how many arrive.
+    if load_rag_config() is None:
+        assert "POL-2" not in text
     error = {"error": "order_not_found"}
     assert json.loads(module.format_tool_result("get_order", error)) == error
 
@@ -78,3 +86,38 @@ def test_paso4b_history_has_state_and_last_turns_only():
     rest = messages[1:]
     expected = ["pregunta 3", "respuesta 3", "pregunta 4", "respuesta 4"]
     assert [m["content"] for m in rest] == expected
+
+
+# ---------------------------------------------------------------------------
+# S3 · Paso 3 · mi_agente/herramientas.py
+# ---------------------------------------------------------------------------
+def _deadline(order_id, delivered_at, status="delivered", returnable=1):
+    from datetime import date
+
+    from carrito.student import load_student_module
+
+    module = load_student_module("herramientas")
+    if module is None:
+        raise NotImplementedError("Falta mi_agente/herramientas.py")
+    pedido = {"order_id": order_id, "status": status, "delivered_at": delivered_at}
+    producto = {"product_id": "P001", "returnable": returnable}
+    return module.plazo_devolucion(pedido, producto, date(2026, 9, 20))
+
+
+@TODO
+def test_s3_paso3_deadline_in_time():
+    result = _deadline("104", "2026-09-12")
+    assert result["se_puede_devolver"] is True
+    assert result["fecha_limite"] == "2026-10-12"
+    assert result["dias_restantes"] == 22
+    assert result["motivo"] == "POL-DEV"
+
+
+@TODO
+def test_s3_paso3_deadline_rules():
+    assert _deadline("103", None, status="shipped")["motivo"] == "no_entregado"
+    personal = _deadline("106", "2026-09-15", returnable=0)
+    assert personal["se_puede_devolver"] is False and personal["motivo"] == "POL-EXC"
+    late = _deadline("102", "2026-08-01")
+    assert late["se_puede_devolver"] is False and late["motivo"] == "plazo_vencido"
+    assert late["fecha_limite"] == "2026-08-31"

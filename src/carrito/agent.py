@@ -33,6 +33,7 @@ def run_agent(
     enable_skills=True,
     tool_descriptions=None,
     format_result=None,
+    extra_tools=(),
 ):
     """`tool_descriptions` and `format_result` let S2 students build the agent's context:
     the text of each tool definition and what each tool result looks like for the model.
@@ -47,7 +48,7 @@ def run_agent(
     messages.append({"role": "user", "content": prompt})
     definitions = [
         d
-        for d in tool_definitions(tool_descriptions)
+        for d in tool_definitions(tool_descriptions, extra=extra_tools)
         if allowed_tools is None or d["name"] in allowed_tools
     ]
     events = []

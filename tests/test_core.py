@@ -381,9 +381,7 @@ def test_evals_reject_wrong_return_payload_and_invented_prices(shop):
     assert not check_case(cases["D09"], result, shop)["passed"]
 
 
-@pytest.mark.parametrize(
-    "split,case_id", [("dev", "D10"), ("dev", "D11"), ("dev", "D12")]
-)
+@pytest.mark.parametrize("split,case_id", [("dev", "D10"), ("dev", "D11"), ("dev", "D12")])
 def test_error_evals_allow_authorized_preflight_read(shop, split, case_id):
     from carrito.evaluation import check_case, load_cases
 

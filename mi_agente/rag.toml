@@ -1,0 +1,27 @@
+# ✏️ S3 · PASO 2 · Cómo busca documentos tu agente (la tool search_policies).
+#
+# Cambia UN valor cada vez y mide:
+#   uv run carrito rag --evaluar            aciertos y tokens con 12 preguntas
+#   uv run carrito rag --buscar "pregunta"  qué piezas encuentra para una pregunta
+#
+# Tu agente usa este archivo en el siguiente mensaje. No hace falta reiniciar nada.
+
+[documentos]
+# Dónde busca. Opciones: "politicas" (6 políticas cortas) y "ayuda" (centro de ayuda).
+fuentes = ["politicas"]
+
+# Cómo se trocea cada documento en piezas que se pueden encontrar:
+#   "documento"  el documento entero es una pieza
+#   "seccion"    cada sección (## Título) es una pieza
+#   "frase"      cada línea es una pieza
+trocear = "documento"
+
+[busqueda]
+# Cómo se ordenan las piezas:
+#   "lexico"      palabras en común con la pregunta
+#   "embeddings"  significado parecido (usa la API de embeddings; la primera vez tarda)
+#   "hibrido"     las dos listas combinadas
+metodo = "lexico"
+
+# Cuántas piezas recibe el modelo. Más piezas: más aciertos posibles y más tokens.
+top_k = 2

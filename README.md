@@ -39,7 +39,7 @@ Más detalle y solución de problemas: [setup](docs/setup.md).
 | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [1 · Fundamentals of GenAI and LLMs](sessions/01_models/)                   | Una primera petición con evidencia, después de explorar tokens y generación |
 | [2 · Context Engineering and Working with LLMs](sessions/02_context/)       | El contexto de tu agente: system prompt, tools, resultados y memoria        |
-| [3 · Building with LangChain, RAG, and Tools](sessions/03_retrieval_tools/) | Retrieval medido, tools e integración MCP                                   |
+| [3 · Building with LangChain, RAG, and Tools](sessions/03_retrieval_tools/) | Documentos (RAG), una tool nueva, LangChain y trazas en LangSmith          |
 | [4 · Designing Agents + Agentic Workflows](sessions/04_agents_state/)       | Un agente con límites, confirmación y recuperación de errores               |
 | [5 · Building a Custom Agent](sessions/05_capstone/)                        | Un perfil propio y una mejora comprobada con casos y trazas                 |
 

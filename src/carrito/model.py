@@ -146,7 +146,9 @@ def make_client():
 
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("Falta OPENAI_API_KEY en .env. Pega la clave de la sesión y repite.")
-    return _RoleFallbackClient(OpenAI())
+    from carrito.trazas import wrap_client
+
+    return _RoleFallbackClient(wrap_client(OpenAI()))
 
 
 class OpenAIModel:

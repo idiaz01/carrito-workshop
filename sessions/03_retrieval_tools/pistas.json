@@ -1,0 +1,24 @@
+{
+  "1": [
+    "Las tres líneas van en .env, no en el código: LANGSMITH_TRACING=true, LANGSMITH_API_KEY=... y LANGSMITH_PROJECT=carrito.",
+    "Si doctor dice 'apagado', revisa que escribiste true en minúsculas y sin espacios.",
+    "En LangSmith: Tracing Projects → carrito → la primera fila. Haz clic y mira el árbol de la izquierda."
+  ],
+  "2": [
+    "Empieza por fuentes: sin el centro de ayuda (\"ayuda\"), la búsqueda solo tiene 6 políticas.",
+    "Con trocear = \"documento\" aciertas mucho pero gastas muchos tokens. Prueba \"seccion\".",
+    "Las preguntas con otras palabras (R4, R12) fallan con \"lexico\". Prueba \"embeddings\" o \"hibrido\".",
+    "Una buena combinación: fuentes = [\"politicas\", \"ayuda\"], trocear = \"seccion\", metodo = \"hibrido\", top_k = 3."
+  ],
+  "3": [
+    "Primero borra la línea raise NotImplementedError. Después rellena los ___ uno a uno.",
+    "Los valores están en el docstring: el estado entregado es \"delivered\", la clave del producto es \"returnable\", la fecha es \"delivered_at\".",
+    "El plazo es de 30 días. Si dias_restantes es menor que 0, el plazo ha vencido.",
+    "Sin la sección ## plazo_devolucion en tools.md, el modelo no ve la tool. Escribe qué hace, cuándo usarla y qué devuelve."
+  ],
+  "4": [
+    "Ejecuta: uv run carrito agente --motor langchain --debug",
+    "En LangSmith, filtra por la traza 'Carrito · LangChain' y ábrela junto a 'Carrito · turno'.",
+    "Busca en src/carrito/langchain_agente.py: ChatOpenAI (el modelo), build_tools (las tools) y system_prompt."
+  ]
+}
