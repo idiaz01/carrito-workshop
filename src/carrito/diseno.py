@@ -33,6 +33,8 @@ def load(path):
         if not isinstance(value, int) or not low <= value <= high:
             raise ConfigError(f"limites.{name}: usa un número entero entre {low} y {high}")
     routes = raw.get("rutas", [])
+    if not isinstance(routes, list):
+        raise ConfigError("rutas: cada ruta empieza con [[rutas]], con dos corchetes")
     for k, route in enumerate(routes, 1):
         if route.get("tipo") not in ROUTE_TYPES:
             raise ConfigError(f"rutas #{k}: tipo tiene que ser {' o '.join(ROUTE_TYPES)}")
@@ -42,7 +44,7 @@ def load(path):
         if route["tipo"] == "fija" and not str(route.get("respuesta", "")).strip():
             raise ConfigError(f'rutas #{k}: una ruta fija necesita respuesta = "..."')
     subagent = raw.get("subagente", {})
-    if not isinstance(subagent.get("activo", False), bool):
+    if not isinstance(subagent, dict) or not isinstance(subagent.get("activo", False), bool):
         raise ConfigError("subagente.activo tiene que ser true o false")
     return {
         "limites": limits,

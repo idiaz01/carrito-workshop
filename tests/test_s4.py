@@ -42,6 +42,9 @@ def test_design_validation(tmp_path):
     path.write_text('[[rutas]]\ntipo = "fija"\npalabras = ["poema"]\n')
     with pytest.raises(diseno.ConfigError, match="respuesta"):
         diseno.load(path)
+    path.write_text('[rutas]\ntipo = "fija"\npalabras = ["poema"]\n')
+    with pytest.raises(diseno.ConfigError, match="dos corchetes"):
+        diseno.load(path)
 
 
 def test_routes_match_words_without_accents():
