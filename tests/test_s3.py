@@ -193,3 +193,19 @@ def test_langchain_agent_runs_the_loop_with_a_fake_model(monkeypatch):
     assert result["calls"] == [("get_order", {"order_id": "104"})]
     assert result["model_calls"] == 2 and result["input_tokens"] == 20
     helper.close()
+
+
+def test_langchain_tools_work_from_another_thread():
+    """LangChain runs tools in a worker thread; the SQLite store must accept that."""
+    import threading
+
+    from carrito.student import StudentAgent
+
+    helper = StudentAgent(model=object())
+    out = {}
+    thread = threading.Thread(
+        target=lambda: out.update(r=helper.tools.dispatch("get_order", {"order_id": "104"}))
+    )
+    thread.start()
+    thread.join()
+    assert "error" not in out["r"]
