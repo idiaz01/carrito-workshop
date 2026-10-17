@@ -12,7 +12,8 @@ REFERENCE_DATE = date(2026, 9, 20)
 def create_store(path: str = ":memory:") -> sqlite3.Connection:
     if path != ":memory:":
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(path)
+    # check_same_thread=False: LangChain (S3) runs tools in a worker thread.
+    db = sqlite3.connect(path, check_same_thread=False)
     db.row_factory = sqlite3.Row
     db.executescript("""
         CREATE TABLE IF NOT EXISTS products (
