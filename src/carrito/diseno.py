@@ -3,6 +3,7 @@
 Students edit mi_agente/agente.toml. Without that file the agent behaves as in S3.
 """
 
+import re
 import tomllib
 from pathlib import Path
 
@@ -62,12 +63,17 @@ def choose_route(text, routes):
     return None
 
 
+ID_PATTERN = re.compile(r"\b(?:POL|AYU)-[A-Z0-9]+\b|\bP\d{3}\b")
+
+
 def seen_ids(events):
     """IDs that came out of a tool in this turn: what the agent may cite."""
     seen = set()
 
     def walk(value):
-        if isinstance(value, dict):
+        if isinstance(value, str):
+            seen.update(ID_PATTERN.findall(value))  # "motivo": "POL-DEV", "(POL-EXC)" in a text
+        elif isinstance(value, dict):
             for key in ("product_id", "source_id", "order_id"):
                 if isinstance(value.get(key), str):
                     seen.add(value[key])
