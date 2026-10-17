@@ -353,7 +353,7 @@ def main():
     )
     cases.add_argument("--reto", action="store_true", help="S2: añade los casos del reto (C9-C12)")
     cases.add_argument(
-        "--sesion", type=int, choices=[2, 3], default=2, help="marcador de la sesión"
+        "--sesion", type=int, choices=[2, 3, 4], default=2, help="marcador de la sesión"
     )
     cases.add_argument("--todos", action="store_true", help="todos los casos de todas las sesiones")
     evaluate = sub.add_parser("eval")
