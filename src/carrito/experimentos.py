@@ -73,12 +73,14 @@ def upload():
 def run_case(inputs, model=None):
     agent = StudentAgent(model=model, warn=lambda m: None)
     answer, tools, tokens, status, salida = "", [], 0, "completed", None
+    evidence = []  # what the tools gave the model: the judge needs it to check DAT-1
     try:
         for text in inputs["turns"]:
             result = agent.ask(text)
             report = result["report"]
             answer, status = result["answer"], result["status"]
             tools += [c["name"] for c in report["calls"]]
+            evidence += [f"{c['name']}: {c['model_sees']}" for c in report["calls"]]
             tokens += report["input_tokens"] + report["output_tokens"]
             salida = report.get("salida")
     finally:
@@ -89,6 +91,7 @@ def run_case(inputs, model=None):
         "tokens": tokens,
         "estado": status,
         "salida": salida,
+        "datos": "\n".join(evidence),
     }
 
 
@@ -156,7 +159,7 @@ def judge(question, answer, evidence="", model=None):
 
 
 def judge_evaluator(inputs, outputs, reference_outputs):
-    verdict = judge(" / ".join(inputs["turns"]), outputs["respuesta"])
+    verdict = judge(" / ".join(inputs["turns"]), outputs["respuesta"], outputs.get("datos", ""))
     return {"key": "juez", "score": int(verdict.veredicto == "bien"), "comment": verdict.motivo}
 
 
