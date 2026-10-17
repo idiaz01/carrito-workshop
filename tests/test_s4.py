@@ -68,6 +68,7 @@ def test_fixed_route_costs_no_model_call(tmp_path, monkeypatch):
     result = agent.ask("Cuéntame un chiste")
     assert result["answer"] == "Solo puedo ayudarte con la tienda."
     assert result["report"]["ruta"] == "fija" and result["report"]["model_calls"] == 0
+    assert sum(result["report"]["blocks"].values()) == 0
     agent.close()
 
 
