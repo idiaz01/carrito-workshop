@@ -30,6 +30,7 @@ Las respuestas del modelo pueden variar entre equipos: es normal.
 
 La [guía de la sesión](exercises.md) resume cada paso.
 [starter.ipynb](starter.ipynb) es material opcional para repasar en casa.
+Una posible solución, con comentarios: [solucion/](solucion/).
 
 ## Fuera de alcance
 
