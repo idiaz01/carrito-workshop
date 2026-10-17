@@ -92,3 +92,19 @@ def test_judge_calibration_counts_agreement(tmp_path):
     report = experimentos.calibrate(model=Lenient([]), path=data)
     assert report["acuerdo"] == 1 and report["total"] == 2
     assert "ACUERDO JUEZ-HUMANO: 1/2" in experimentos.render_calibration(report)
+
+
+def test_judge_evaluator_receives_the_tool_data(monkeypatch):
+    from carrito import experimentos
+
+    seen = {}
+
+    def fake_judge(question, answer, evidence="", model=None):
+        seen["evidence"] = evidence
+        return experimentos.Veredicto(veredicto="bien", motivo="ok")
+
+    monkeypatch.setattr(experimentos, "judge", fake_judge)
+    outputs = {"respuesta": "P001", "datos": "search_products: [P001 69,90]"}
+    result = experimentos.judge_evaluator({"turns": ["¿Auriculares?"]}, outputs, {})
+    assert result["score"] == 1
+    assert seen["evidence"] == "search_products: [P001 69,90]"
