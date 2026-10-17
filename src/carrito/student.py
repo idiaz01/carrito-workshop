@@ -547,6 +547,9 @@ class StudentAgent:
             "input_tokens": sum(u.get("input_tokens", 0) for u in usage + sub),
             "output_tokens": sum(u.get("output_tokens", 0) for u in usage + sub),
         }
+        if route and route["tipo"] == "fija":
+            # A fixed route never calls the model: nothing was sent, nothing is paid.
+            report["blocks"] = dict.fromkeys(report["blocks"], 0)
         return {
             "answer": run["answer"],
             "status": run["status"],
