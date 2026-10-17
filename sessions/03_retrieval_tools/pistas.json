@@ -8,7 +8,7 @@
     "Empieza por fuentes: sin el centro de ayuda (\"ayuda\"), la búsqueda solo tiene 6 políticas.",
     "Con trocear = \"documento\" aciertas mucho pero gastas muchos tokens. Prueba \"seccion\".",
     "Las preguntas con otras palabras (R4, R12) fallan con \"lexico\". Prueba \"embeddings\" o \"hibrido\".",
-    "Una buena combinación: fuentes = [\"politicas\", \"ayuda\"], trocear = \"seccion\", metodo = \"hibrido\", top_k = 3."
+    "Una buena combinación: fuentes = [\"politicas\", \"ayuda\"], trocear = \"seccion\", metodo = \"embeddings\", top_k = 3. Compárala con \"hibrido\": combinar no siempre gana."
   ],
   "3": [
     "Primero borra la línea raise NotImplementedError. Después rellena los ___ uno a uno.",

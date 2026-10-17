@@ -4,7 +4,7 @@ No es la única correcta. Es la que vimos en clase. Parte de la [solución de S2
 
 | Archivo | Lab | Qué cambia |
 |---|---|---|
-| [rag.toml](rag.toml) | 2 | Políticas y centro de ayuda, troceado por sección, búsqueda híbrida, `top_k = 3` |
+| [rag.toml](rag.toml) | 2 | Políticas y centro de ayuda, troceado por sección, embeddings, `top_k = 3`. Medido: 12/12 (híbrido: 11/12) |
 | [herramientas.py](herramientas.py) | 3 | `plazo_devolucion`, con los cinco huecos rellenos y comentados |
 | [tools.md](tools.md) | 3 | `search_policies` habla del centro de ayuda; nueva sección `plazo_devolucion` |
 | [system.md](system.md) | Reto | Las excepciones van primero; el plazo de un pedido se pide a `plazo_devolucion` |
