@@ -1,0 +1,20 @@
+# Una posible solución de S4. Mídela: uv run carrito casos --sesion 4
+
+[limites]
+max_pasos = 8        # 1 (mis_pedidos) + 5 plazos de uno en uno + 1 respuesta = 7; uno de margen
+max_tools = 10       # suficiente para mis_pedidos + 7 plazos; corta un bucle
+max_tokens = 20000
+
+# Workflow 1: fuera de alcance, sin modelo (0 tokens)
+[[rutas]]
+tipo = "fija"
+palabras = ["poema", "chiste", "canción", "receta", "cuento"]
+respuesta = "Solo puedo ayudarte con la tienda Carrito: productos, pedidos, envíos y devoluciones."
+
+# Workflow 2: preguntas de documentos, una sola llamada y sin tools
+[[rutas]]
+tipo = "buscar"
+palabras = ["envío", "envíos", "enviar", "garantía", "pago", "pagar", "cupón", "factura", "regalo"]
+
+[subagente]
+activo = false       # aísla el contexto, pero gasta más tokens en total: mídelo

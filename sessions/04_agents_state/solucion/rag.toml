@@ -1,0 +1,9 @@
+# Una posible solución del S3 · Paso 2. Mídela: uv run carrito rag --evaluar
+
+[documentos]
+fuentes = ["politicas", "ayuda"]   # sin el centro de ayuda, casi nada se encuentra
+trocear = "seccion"                # documento: muchos tokens · frase: se separa la regla de su excepción
+
+[busqueda]
+metodo = "hibrido"                 # léxico para nombres (Batería Faro) + embeddings para paráfrasis
+top_k = 3
