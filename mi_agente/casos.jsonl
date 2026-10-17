@@ -1,0 +1,1 @@
+{"id": "M1", "spec": "Skill comparar", "turns": ["Compara los Auriculares Nube y los Auriculares Estudio."], "checks": [{"type": "tool_called", "name": "cargar_skill"}, {"type": "contains", "values": ["P001", "P002"]}]}

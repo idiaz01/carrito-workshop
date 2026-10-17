@@ -49,7 +49,10 @@ def check_case(case, answer, tools_called):
 
 
 def all_case_files():
-    return [CASES, RETO] + [f for s, files in SESSIONS.items() if s != 2 for f in files]
+    from carrito.student import FOLDER
+
+    own = [FOLDER / "casos.jsonl"]  # S5: the student's own cases
+    return [CASES, RETO] + [f for s, files in SESSIONS.items() if s != 2 for f in files] + own
 
 
 def run_cases(model_factory=None, only=None, on_turn=None, reto=False, sesion=2, todos=False):

@@ -1,0 +1,23 @@
+{
+  "1": [
+    "Copia mi_agente/skills/comparar.md con otro nombre y cambia la cabecera: nombre y descripcion.",
+    "La descripción decide cuándo la usa el modelo: escribe CUÁNDO usarla, en una frase.",
+    "En casos.jsonl, cada línea es un caso completo en JSON. Copia la línea de M1 y cambia id, spec, turns y checks.",
+    "Si el caso no llama a cargar_skill, mira la línea «Ruta» en --debug: una ruta de agente.toml puede atrapar la pregunta."
+  ],
+  "2": [
+    "Necesitas LangSmith activo: uv run carrito doctor debe decir \"langsmith\": \"OK\".",
+    "En LangSmith: Datasets & Experiments → carrito-carrito (o el nombre de tu proyecto) → Experiments.",
+    "Haz clic en un caso con checks = 0: verás la respuesta y el comentario con el motivo."
+  ],
+  "3": [
+    "Borra las dos líneas raise NotImplementedError (una en cada función).",
+    "cita_fuentes: sin tools, el score es 1. Si hay al menos un ID, len(ids) > 0.",
+    "breve: como mucho 4 frases (frases <= 4). Si no, el score es 0."
+  ],
+  "4": [
+    "La rúbrica inicial («Di si la respuesta es buena») es demasiado vaga: el juez aprueba casi todo.",
+    "Escribe criterios concretos con los IDs de SPEC.md: DAT-2 (no inventar), RESP-1 (citar), RESP-3 (breve), ESC-2 (no decir que está hecho).",
+    "Di qué cuenta como «bien» aunque no responda: rechazar lo que está fuera de alcance o pedir un dato que falta."
+  ]
+}

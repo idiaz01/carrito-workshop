@@ -40,6 +40,10 @@ class NoArgs(Arguments):
     pass
 
 
+class SkillArgs(Arguments):
+    nombre: str = Field(min_length=1, max_length=60)
+
+
 class ReturnArgs(OrderArgs):
     reason: str = Field(min_length=1, max_length=500, pattern=r"\S")
 
@@ -51,13 +55,17 @@ ARGUMENTS = {
     "request_return": ReturnArgs,
 }
 # Tools the student adds from S3 on. They are offered only when the agent asks for them.
-EXTRA_ARGUMENTS = {"plazo_devolucion": OrderArgs, "mis_pedidos": NoArgs}
+EXTRA_ARGUMENTS = {"plazo_devolucion": OrderArgs, "mis_pedidos": NoArgs, "cargar_skill": SkillArgs}
 DESCRIPTIONS = {
     "search_products": "Search the catalog. Prices in cents; optional budget in euros.",
     "get_order": "Read one order belonging to the host's active user.",
     "search_policies": "Retrieve short policy documents with source IDs.",
     "request_return": "Prepare a return request; only host-confirmed exact payloads can write.",
     "plazo_devolucion": "Return deadline of one order of the active user.",
+    "cargar_skill": (
+        "Carga las instrucciones completas de una skill de la lista «Skills disponibles». "
+        "Úsala antes de una tarea que encaja con su descripción. nombre: el nombre exacto."
+    ),
     "mis_pedidos": (
         "Lista los pedidos del cliente activo: número, producto, estado y fecha de entrega. "
         "Úsala cuando el cliente pregunte por sus pedidos sin dar un número. Sin argumentos."

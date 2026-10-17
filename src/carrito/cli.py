@@ -261,6 +261,7 @@ def rag_command(evaluar, buscar):
 SOLUTIONS = {
     "s3": ("s2", ROOT / "sessions" / "02_context" / "solucion"),
     "s4": ("s3", ROOT / "sessions" / "03_retrieval_tools" / "solucion"),
+    "s5": ("s4", ROOT / "sessions" / "04_agents_state" / "solucion"),
 }
 
 
@@ -312,6 +313,29 @@ def pista(codigo):
     state_file.write_text(json.dumps(state))
 
 
+def evals_command(accion, nombre, repeticiones, juez, caso):
+    """S5: dataset and experiments in LangSmith, local evaluation and judge calibration."""
+    from carrito import experimentos as ex
+    from carrito.trazas import enabled
+
+    if accion in {"subir", "experimento"} and not enabled():
+        print(
+            "Necesitas LangSmith activo en .env (LANGSMITH_TRACING=true y tu clave). "
+            "Sin LangSmith: uv run carrito evals local"
+        )
+        raise SystemExit(1)
+    if accion == "subir":
+        show(ex.upload())
+    elif accion == "experimento":
+        ex.experiment(nombre, repeticiones, juez)
+        where = ex.dataset_name()
+        print(f"Experimento «{nombre}» terminado. En LangSmith: Datasets → {where}.")
+    elif accion == "local":
+        print(ex.render_local(ex.local(only=caso, with_judge=juez)))
+    elif accion == "juez":
+        print(ex.render_calibration(ex.calibrate()))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Carrito · taller local")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -343,6 +367,16 @@ def main():
     rag_parser.add_argument("--buscar", help="qué piezas encuentra para una pregunta")
     start = sub.add_parser("empezar", help="empieza una sesión desde la solución de la anterior")
     start.add_argument("sesion", choices=sorted(SOLUTIONS))
+    evals_parser = sub.add_parser("evals", help="S5: dataset, experimentos y juez en LangSmith")
+    evals_parser.add_argument("accion", choices=["subir", "experimento", "local", "juez"])
+    evals_parser.add_argument("--nombre", default="base", help="nombre del experimento")
+    evals_parser.add_argument(
+        "--repeticiones", type=int, default=1, help="veces que se repite cada caso"
+    )
+    evals_parser.add_argument(
+        "--juez", action="store_true", help="añade el juez LLM (mi_agente/juez.md)"
+    )
+    evals_parser.add_argument("--caso", action="append", help="local: solo este caso")
     hint = sub.add_parser("pista", help="la siguiente pista de un lab: carrito pista s3-2")
     hint.add_argument("codigo")
     cases = sub.add_parser("casos", help="S2: marcador de casos de tu agente")
@@ -407,6 +441,8 @@ def main():
         empezar(args.sesion)
     elif args.command == "pista":
         pista(args.codigo)
+    elif args.command == "evals":
+        evals_command(args.accion, args.nombre, args.repeticiones, args.juez, args.caso)
     elif args.command == "casos":
         casos(args.debug, args.caso, args.comparar, args.reto, args.sesion, args.todos)
     elif args.command == "eval":
