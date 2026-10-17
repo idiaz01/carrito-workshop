@@ -72,7 +72,7 @@ def upload():
 # ---------------------------------------------------------------------------
 def run_case(inputs, model=None):
     agent = StudentAgent(model=model, warn=lambda m: None)
-    answer, tools, tokens, status = "", [], 0, "completed"
+    answer, tools, tokens, status, salida = "", [], 0, "completed", None
     try:
         for text in inputs["turns"]:
             result = agent.ask(text)
@@ -80,9 +80,16 @@ def run_case(inputs, model=None):
             answer, status = result["answer"], result["status"]
             tools += [c["name"] for c in report["calls"]]
             tokens += report["input_tokens"] + report["output_tokens"]
+            salida = report.get("salida")
     finally:
         agent.close()
-    return {"respuesta": answer, "tools": tools, "tokens": tokens, "estado": status}
+    return {
+        "respuesta": answer,
+        "tools": tools,
+        "tokens": tokens,
+        "estado": status,
+        "salida": salida,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +97,10 @@ def run_case(inputs, model=None):
 # ---------------------------------------------------------------------------
 def checks(inputs, outputs, reference_outputs):
     failures = check_case(
-        {"checks": reference_outputs["checks"]}, outputs["respuesta"], outputs["tools"]
+        {"checks": reference_outputs["checks"]},
+        outputs["respuesta"],
+        outputs["tools"],
+        {"tokens": outputs["tokens"], "salida": outputs.get("salida")},
     )
     return {"key": "checks", "score": int(not failures), "comment": "; ".join(failures) or "ok"}
 
