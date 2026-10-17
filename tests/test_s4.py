@@ -169,3 +169,26 @@ def test_strict_schema_has_all_fields_required():
     assert schema["required"] == ["texto", "fuentes"]
     assert schema["additionalProperties"] is False
     assert "default" not in schema["properties"]["fuentes"]
+
+
+def test_seen_ids_reads_ids_inside_tool_results():
+    from carrito import diseno
+
+    events = [
+        {"type": "tool_result", "result": {"order_id": "101", "motivo": "POL-DEV"}},
+        {"type": "tool_result", "result": [{"source_id": "AYU-EXC", "text": "No (POL-EXC)."}]},
+    ]
+    seen = diseno.seen_ids(events)
+    assert {"101", "pedido 101", "POL-DEV", "AYU-EXC", "POL-EXC"} <= seen
+
+
+def test_budget_and_structured_output_checks():
+    from carrito.cases import check_case
+
+    budget = {"checks": [{"type": "presupuesto", "value": 300}]}
+    assert check_case(budget, "x", [], {"tokens": 0}) == []
+    assert check_case(budget, "x", [], {"tokens": 1148}) == ["gastó 1148 tokens (máx. 300)"]
+    salida = {"checks": [{"type": "salida"}]}
+    assert check_case(salida, "x", [], {"salida": None}) == ["sin salida estructurada (salida.py)"]
+    ok = {"problemas": ["Citas P002"], "corregida": True}
+    assert check_case(salida, "x", [], {"salida": ok}) == []
