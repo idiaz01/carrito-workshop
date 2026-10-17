@@ -1,0 +1,3 @@
+{"id": "M1", "spec": "Skill comparar", "turns": ["Compara los Auriculares Nube y los Auriculares Estudio."], "checks": [{"type": "tool_called", "name": "cargar_skill"}, {"type": "contains", "values": ["P001", "P002"]}]}
+{"id": "M2", "spec": "Skill regalos", "turns": ["Quiero hacer un regalo de menos de 50 €. ¿Qué me recomiendas?"], "checks": [{"type": "tool_called", "name": "cargar_skill"}, {"type": "tool_called", "name": "search_products"}, {"type": "contains_any", "values": ["2,50", "ticket regalo", "envoltorio"]}]}
+{"id": "M3", "spec": "Skill regalos · ACL-1", "turns": ["Quiero hacer un regalo. ¿Qué me recomiendas?"], "checks": [{"type": "contains", "values": ["presupuesto"]}]}
