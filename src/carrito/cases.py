@@ -9,7 +9,11 @@ from carrito.student import ROOT, StudentAgent
 CASES = ROOT / "evals" / "s2_casos.jsonl"
 RETO = ROOT / "evals" / "s2_reto.jsonl"
 # The scoreboard of each session. S2 also has its reto (C9-C12).
-SESSIONS = {2: [CASES], 3: [ROOT / "evals" / "s3_casos.jsonl"]}
+SESSIONS = {
+    2: [CASES],
+    3: [ROOT / "evals" / "s3_casos.jsonl"],
+    4: [ROOT / "evals" / "s4_casos.jsonl"],
+}
 RESULTS = ROOT / "runtime" / "casos"
 
 

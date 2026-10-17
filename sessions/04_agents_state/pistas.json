@@ -1,0 +1,23 @@
+{
+  "1": [
+    "Ejecuta: uv run carrito casos --caso C28 --debug. Mira la línea «Ruta: … estado:». Si dice step_limit, faltan pasos.",
+    "Cada respuesta del modelo es un paso. Si pide los plazos de uno en uno, necesita 1 (mis_pedidos) + 5 (plazos) + 1 (respuesta) pasos.",
+    "Prueba max_pasos = 8. Y baja max_tools a 10: suficiente para la tarea, y corta un bucle."
+  ],
+  "2": [
+    "Quita los # del ejemplo de agente.toml para activar la ruta fija.",
+    "Una ruta \"fija\" responde sin modelo: 0 tokens. Úsala para lo que está fuera de alcance (poemas, chistes…).",
+    "Una ruta \"buscar\" sirve para preguntas de documentos: envío, garantía, pago, cupón…",
+    "Cuidado: «¿Cuál es el estado del envío de mi pedido 103?» contiene «envío», pero necesita get_order. Elige bien las palabras."
+  ],
+  "3": [
+    "Borra la línea raise NotImplementedError. Después rellena los ___ uno a uno.",
+    "Regla 1: la fuente tiene que estar en vistos. Regla 2: el máximo son 600 caracteres.",
+    "Regla 3: el campo se llama pide_confirmacion (míralo en la clase Respuesta)."
+  ],
+  "4": [
+    "Escribe en subagente.md: qué hace, qué devuelve (un resumen corto con IDs) y qué hacer si no encuentra nada.",
+    "Activa el subagente: [subagente] activo = true en agente.toml.",
+    "En --debug, la línea «Subagente» dice cuántas llamadas y tokens gasta. En LangSmith, busca la rama «subagente · documentos»."
+  ]
+}

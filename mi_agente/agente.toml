@@ -1,0 +1,33 @@
+# ✏️ S4 · El diseño de tu agente. Cambia UN valor cada vez y mide:
+#   uv run carrito casos --sesion 4
+# Tu agente usa este archivo en el siguiente mensaje.
+
+# ---------------------------------------------------------------------------
+# LAB 1 · Límites del loop. Un agente sin límites puede dar vueltas sin parar.
+# ---------------------------------------------------------------------------
+[limites]
+max_pasos = 5        # llamadas al modelo por turno
+max_tools = 12       # llamadas a tools por turno
+max_tokens = 16000   # tokens (entrada + salida) por turno
+
+# ---------------------------------------------------------------------------
+# LAB 2 · Rutas: workflows fijos antes del agente.
+# Si el mensaje comparte una palabra con una ruta, se usa esa ruta (la primera).
+# Si no, decide el agente, como siempre.
+#
+#   tipo = "fija"    responde siempre `respuesta`, sin llamar al modelo (0 tokens)
+#   tipo = "buscar"  busca en los documentos y responde en UNA llamada, sin tools
+#
+# Ejemplo (quita los # para activarlo):
+# [[rutas]]
+# tipo = "fija"
+# palabras = ["poema"]
+# respuesta = "Solo puedo ayudarte con la tienda."
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# LAB 4 · Subagente. Si está activo, search_policies la hace un subagente con
+# su propio prompt (mi_agente/subagente.md) y su propia ventana de contexto.
+# ---------------------------------------------------------------------------
+[subagente]
+activo = false

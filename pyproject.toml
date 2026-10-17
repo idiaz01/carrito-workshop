@@ -44,3 +44,4 @@ select = ["E", "F", "I"]
 "*.ipynb" = ["E402", "E501"]
 # Lab skeletons: ___ marks the gaps the student fills in.
 "mi_agente/herramientas.py" = ["F821"]
+"mi_agente/salida.py" = ["F821"]

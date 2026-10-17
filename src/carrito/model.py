@@ -165,7 +165,7 @@ class OpenAIModel:
 
     include_reasoning = True
 
-    def respond(self, messages: list[dict], tools: list[dict]) -> ModelTurn:
+    def respond(self, messages: list[dict], tools: list[dict], text_format=None) -> ModelTurn:
         request = {
             "model": self.model,
             "input": messages,
@@ -174,6 +174,9 @@ class OpenAIModel:
         }
         if tools:
             request["tools"] = tools
+        if text_format:
+            # S4: Structured Outputs. The final message must follow this JSON schema.
+            request["text"] = {"format": text_format}
         if self.include_reasoning:
             request["include"] = ["reasoning.encrypted_content"]
         try:
@@ -257,7 +260,7 @@ class FixtureModel:
         }
         return cls([[call], []], final_text=text)
 
-    def respond(self, messages: list[dict], tools: list[dict]) -> ModelTurn:
+    def respond(self, messages: list[dict], tools: list[dict], text_format=None) -> ModelTurn:
         output = self.turns[self.index] if self.index < len(self.turns) else []
         self.index += 1
         return ModelTurn(
