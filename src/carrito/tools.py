@@ -46,18 +46,23 @@ ARGUMENTS = {
     "search_policies": PolicyArgs,
     "request_return": ReturnArgs,
 }
+# Tools the student adds from S3 on. They are offered only when the agent asks for them.
+EXTRA_ARGUMENTS = {"plazo_devolucion": OrderArgs}
 DESCRIPTIONS = {
     "search_products": "Search the catalog. Prices in cents; optional budget in euros.",
     "get_order": "Read one order belonging to the host's active user.",
     "search_policies": "Retrieve short policy documents with source IDs.",
     "request_return": "Prepare a return request; only host-confirmed exact payloads can write.",
+    "plazo_devolucion": "Return deadline of one order of the active user.",
 }
 
 
-def tool_definitions(descriptions: dict | None = None) -> list[dict]:
-    """Native tool definitions. `descriptions` overrides the text the model reads."""
+def tool_definitions(descriptions: dict | None = None, extra=()) -> list[dict]:
+    """Native tool definitions. `descriptions` overrides the text the model reads.
+    `extra` adds student tools (S3+) by name, for example ("plazo_devolucion",)."""
     definitions = []
-    for name, schema in ARGUMENTS.items():
+    schemas = {**ARGUMENTS, **{name: EXTRA_ARGUMENTS[name] for name in extra}}
+    for name, schema in schemas.items():
         parameters = schema.model_json_schema()
         # Strict native tools require every property, including nullable fields.
         parameters["required"] = list(parameters["properties"])
@@ -76,11 +81,19 @@ def tool_definitions(descriptions: dict | None = None) -> list[dict]:
 
 
 class StoreTools:
-    def __init__(self, db: sqlite3.Connection, user_id: str = "user1", policy_retriever=None):
+    def __init__(
+        self,
+        db: sqlite3.Connection,
+        user_id: str = "user1",
+        policy_retriever=None,
+        deadline_function=None,
+    ):
         if user_id not in {"user1", "user2"}:
             raise ValueError("Unknown host user")
         self.db = db
         self.policy_retriever = policy_retriever
+        # S3: the student's plazo_devolucion(pedido, producto, hoy) from mi_agente/herramientas.py
+        self.deadline_function = deadline_function
         self.user_id = user_id
         self.pending: tuple[str, str] | None = None
         self._confirmed: tuple[str, str] | None = None
@@ -118,6 +131,16 @@ class StoreTools:
             if score or not tokens:
                 documents.append({"source_id": path.stem, "text": body, "score": score})
         return sorted(documents, key=lambda r: (-r["score"], r["source_id"]))
+
+    def plazo_devolucion(self, order_id: str) -> dict:
+        """S3 student tool. The host reads the order (identity, PER-1); the student computes."""
+        order = self.get_order(order_id)
+        if "error" in order or self.deadline_function is None:
+            return order if "error" in order else {"error": "tool_unavailable"}
+        product = self.db.execute(
+            "SELECT * FROM products WHERE product_id=?", (order["product_id"],)
+        ).fetchone()
+        return self.deadline_function(order, dict(product), REFERENCE_DATE)
 
     def confirm_pending(self) -> dict:
         """Trusted host/UI action. Never expose this method as a model tool."""
@@ -168,10 +191,11 @@ class StoreTools:
         return self.db.execute("SELECT count(*) FROM return_requests").fetchone()[0]
 
     def dispatch(self, name: str, arguments: dict) -> dict | list:
-        if name not in ARGUMENTS:
+        schemas = {**ARGUMENTS, **EXTRA_ARGUMENTS}
+        if name not in schemas:
             return {"error": "unknown_tool", "tool": name}
         try:
-            validated = ARGUMENTS[name].model_validate(arguments)
+            validated = schemas[name].model_validate(arguments)
             return getattr(self, name)(**validated.model_dump())
         except ValidationError as exc:
             return {

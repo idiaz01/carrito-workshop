@@ -10,12 +10,14 @@ import importlib.util
 import json
 import os
 import re
+import uuid
 from pathlib import Path
 
+from carrito import rag, trazas
 from carrito.agent import run_agent
 from carrito.model import OpenAIModel
-from carrito.store import create_store
-from carrito.tools import ARGUMENTS, StoreTools, tool_definitions
+from carrito.store import REFERENCE_DATE, create_store
+from carrito.tools import ARGUMENTS, EXTRA_ARGUMENTS, StoreTools, tool_definitions
 
 ROOT = Path(__file__).resolve().parents[2]
 # CARRITO_MI_AGENTE points to another folder (for example, the teacher's reference version).
@@ -55,6 +57,11 @@ def load_tool_descriptions():
     for name in ARGUMENTS:
         text = "\n".join(descriptions.get(name, [])).strip()
         result[name] = text or name
+    # S3+: a student tool exists for the model only when tools.md describes it.
+    for name in EXTRA_ARGUMENTS:
+        text = "\n".join(descriptions.get(name, [])).strip()
+        if text:
+            result[name] = text
     return result
 
 
@@ -72,18 +79,56 @@ def system_prompt_status():
 def tool_descriptions_status():
     """S2 · Paso 2. Raises NotImplementedError while tools.md keeps a starting description."""
     descriptions = load_tool_descriptions()
-    unchanged = [n for n, d in descriptions.items() if d.strip() in {DEFAULT_TOOLS[n], n}]
+    unchanged = [
+        n
+        for n, d in descriptions.items()
+        if n in DEFAULT_TOOLS and d.strip() in {DEFAULT_TOOLS[n], n}
+    ]
     if unchanged:
         raise NotImplementedError("Descripciones sin cambiar: " + ", ".join(unchanged))
     return {n: len(d) for n, d in descriptions.items()}
 
 
-def load_student_module():
-    """Import mi_agente/contexto.py again on every call: edits apply without a restart."""
-    spec = importlib.util.spec_from_file_location("mi_agente_contexto", FOLDER / "contexto.py")
+def load_student_module(name="contexto"):
+    """Import mi_agente/<name>.py again on every call: edits apply without a restart."""
+    path = FOLDER / f"{name}.py"
+    if not path.exists():
+        return None
+    spec = importlib.util.spec_from_file_location(f"mi_agente_{name}", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def load_rag_config():
+    """S3 · Paso 2. None while mi_agente/rag.toml does not exist (S2 behaviour)."""
+    return rag.load_config(FOLDER / "rag.toml")
+
+
+# A sample order for checking mi_agente/herramientas.py without the API.
+SAMPLE_ORDER = {
+    "order_id": "104",
+    "user_id": "user1",
+    "product_id": "P001",
+    "status": "delivered",
+    "delivered_at": "2026-09-12",
+}
+SAMPLE_PRODUCT = {
+    "product_id": "P001",
+    "name": "Auriculares Nube",
+    "category": "audio",
+    "price_cents": 6990,
+    "description": "auriculares",
+    "returnable": 1,
+}
+
+
+def deadline_status():
+    """S3 · Paso 3. Raises NotImplementedError while plazo_devolucion is not written."""
+    module = load_student_module("herramientas")
+    if module is None or not hasattr(module, "plazo_devolucion"):
+        raise NotImplementedError("Falta mi_agente/herramientas.py con plazo_devolucion")
+    return module.plazo_devolucion(dict(SAMPLE_ORDER), dict(SAMPLE_PRODUCT), REFERENCE_DATE)
 
 
 def _dumps(value):
@@ -120,19 +165,29 @@ def estimate_tokens(text):
     return max(0, round(len(text) / 4)) if text else 0
 
 
+class StudentTools(StoreTools):
+    """The store tools, with each call traced as a LangSmith "tool" run when tracing is on."""
+
+    def dispatch(self, name, arguments):
+        traced = trazas.traceable(run_type="tool", name=name)(super().dispatch)
+        return traced(name, arguments)
+
+
 class StudentAgent:
     """One conversation with the agent built from mi_agente/."""
 
     def __init__(self, model=None, user_id="user1", warn=print):
-        self.tools = StoreTools(create_store(), user_id=user_id)
+        self.tools = StudentTools(create_store(), user_id=user_id)
         self.model = model or OpenAIModel()
         self.turns = []
         self.state = {}
         self.warn = warn
         self.uses = {}
+        self.thread_id = str(uuid.uuid4())
+        self.rag_config = None
 
     def _student(self, module, name, fallback, *args, check=None):
-        function = getattr(module, name, None)
+        function = getattr(module, name, None) if module is not None else None
         if function is None:
             self.uses[name] = "falta"
             return fallback()
@@ -154,7 +209,68 @@ class StudentAgent:
         self.uses[name] = "tuya"
         return value
 
+    # ---- S3 · RAG (rag.toml) and the student's tool (herramientas.py) -------------------
+    def _configure_rag(self):
+        try:
+            config = load_rag_config()
+        except rag.ConfigError as exc:
+            self.warn(f"⚠️  {exc}. Uso la búsqueda de S2.")
+            config = None
+        self.rag_config = config
+        if config is None:
+            self.tools.policy_retriever = None
+            return
+
+        @trazas.traceable(run_type="retriever", name="search_policies · RAG")
+        def retrieve(query):
+            return trazas.as_documents(rag.search(query, config))
+
+        def retriever(query):
+            if trazas.enabled():
+                documents = retrieve(query)["documents"]
+                return [{**d["metadata"], "text": d["page_content"]} for d in documents]
+            return rag.search(query, config)
+
+        self.tools.policy_retriever = retriever
+
+    def _configure_tools(self, descriptions):
+        """plazo_devolucion is offered only when tools.md describes it and the function works."""
+        module = load_student_module("herramientas")
+        self.tools.deadline_function = None
+        if module is None:
+            return ()
+        if "plazo_devolucion" not in descriptions:
+            self.uses["plazo_devolucion"] = "sin describir en tools.md"
+            return ()
+        sample = self._student(
+            module,
+            "plazo_devolucion",
+            lambda: None,
+            dict(SAMPLE_ORDER),
+            dict(SAMPLE_PRODUCT),
+            REFERENCE_DATE,
+            check=lambda v: isinstance(v, dict),
+        )
+        if sample is None:
+            return ()
+
+        def deadline(order, product, today):
+            try:
+                value = module.plazo_devolucion(order, product, today)
+            except Exception as exc:  # noqa: BLE001
+                self.warn(f"⚠️  Error en tu plazo_devolucion: {type(exc).__name__}: {exc}")
+                return {"error": "tool_error"}
+            return value if isinstance(value, dict) else {"error": "tool_error"}
+
+        self.tools.deadline_function = deadline
+        return ("plazo_devolucion",)
+
     def ask(self, text, max_steps=5):
+        with trazas.tracing_context(session_id=self.thread_id):
+            traced = trazas.traceable(run_type="chain", name="Carrito · turno")(self._ask)
+            return traced(text, max_steps)
+
+    def _ask(self, text, max_steps=5):
         module = load_student_module()
         self.uses = {}
         state = self._student(
@@ -175,6 +291,8 @@ class StudentAgent:
         )
         system, version = load_system_prompt()
         descriptions = load_tool_descriptions()
+        self._configure_rag()
+        extra = self._configure_tools(descriptions)
 
         def formatter(name, result):
             return self._student(
@@ -196,6 +314,7 @@ class StudentAgent:
             enable_skills=False,
             tool_descriptions=descriptions,
             format_result=formatter,
+            extra_tools=extra,
         )
         tool_events = [e for e in run["events"] if e["type"] == "tool_result"]
         self.turns.append(
@@ -209,12 +328,13 @@ class StudentAgent:
             }
         )
         self.state = state
-        definitions = tool_definitions(descriptions)
+        definitions = tool_definitions(descriptions, extra=extra)
         usage = [e["usage"] for e in run["events"] if e["type"] == "model_response"]
         report = {
             "prompt_version": version,
             "uses": dict(self.uses),
             "state": state,
+            "rag": self.rag_config,
             "blocks": {
                 "system": estimate_tokens(system),
                 "tools": estimate_tokens(_dumps(definitions)),
@@ -269,6 +389,12 @@ def render_report(report, turn):
             arguments = str(call["arguments"])
         lines.append(f"  → {call['name']} {arguments}")
         lines.append(f"    ← el modelo ve {len(call['model_sees'])} caracteres: {preview[:110]}")
+    if report.get("rag"):
+        c = report["rag"]
+        lines.append(
+            f"  RAG: fuentes={'+'.join(c['fuentes'])} · trocear={c['trocear']}"
+            f" · metodo={c['metodo']} · top_k={c['top_k']}"
+        )
     pieces = ", ".join(f"{k}: {v}" for k, v in report["uses"].items())
     lines.append(f"  Tus funciones: {pieces}")
     if report["state"]:

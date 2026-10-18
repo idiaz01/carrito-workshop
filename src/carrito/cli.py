@@ -11,7 +11,7 @@ from carrito.evaluation import run_evals
 from carrito.judge import judge_demo
 from carrito.model import FixtureModel, OpenAIModel, live_check, load_settings
 from carrito.skills import activate_skill
-from carrito.store import REFERENCE_DATE, create_store
+from carrito.store import REFERENCE_DATE, ROOT, create_store
 from carrito.tools import StoreTools
 
 PROMPTS = {
@@ -45,6 +45,9 @@ def doctor():
         report["live_check"] = {"api": "ERROR", "message": str(exc)}
         show(report)
         raise SystemExit(1) from None
+    from carrito.trazas import check
+
+    report["trazas"] = check()
     show(report)
 
 
@@ -123,13 +126,50 @@ def chat(mode, trace_dir):
     tools.db.close()
 
 
+def mi_agente_langchain(debug, question, user):
+    """S3 · Lab 4: the same mi_agente/, with LangChain's loop."""
+    from carrito.langchain_agente import ask, build_agent
+    from carrito.student import FOLDER
+
+    agent, helper = build_agent(user)
+    print(f"Tu agente con LangChain · {FOLDER.name}/. /salir sale.")
+    while True:
+        if question is not None:
+            prompt = question
+        else:
+            try:
+                prompt = input("Tú> ").strip()
+            except EOFError:
+                break
+        if prompt in {"/salir", "/quit"}:
+            break
+        if not prompt:
+            continue
+        result = ask(agent, helper, prompt)
+        if debug:
+            print(
+                f"  LangChain: {result['model_calls']} llamadas al modelo · "
+                f"{result['input_tokens']} tokens de entrada · {result['output_tokens']} de salida"
+            )
+            for name, arguments in result["calls"]:
+                print(f"  → {name} {json.dumps(arguments, ensure_ascii=False)}")
+        print(f"Carrito> {result['answer']}\n")
+        if question is not None:
+            break
+    helper.close()
+
+
 def mi_agente(debug, question, user):
     """S2: chat with the agent built from mi_agente/. Edits apply on the next message."""
-    from carrito.student import StudentAgent, render_report
+    from carrito.student import FOLDER, ROOT, StudentAgent, render_report
 
     agent = StudentAgent(user_id=user)
+    try:
+        where = FOLDER.resolve().relative_to(ROOT)
+    except ValueError:
+        where = FOLDER
     turn = 0
-    print("Tu agente · mi_agente/. /reset empieza otra conversación; /salir sale.")
+    print(f"Tu agente · {where}/. /reset empieza otra conversación; /salir sale.")
     try:
         while True:
             if question is not None:
@@ -160,7 +200,7 @@ def mi_agente(debug, question, user):
         agent.close()
 
 
-def casos(debug, only, compare=False, reto=False):
+def casos(debug, only, compare=False, reto=False, sesion=2, todos=False):
     """S2 scoreboard: more cases passed with fewer tokens."""
     from carrito.cases import (
         last_two_reports,
@@ -185,10 +225,79 @@ def casos(debug, only, compare=False, reto=False):
             print(render_report(result["report"], turn))
         print(f"        Carrito> {result['answer'][:300]}\n")
 
-    report = run_cases(only=only, on_turn=on_turn, reto=reto)
+    report = run_cases(only=only, on_turn=on_turn, reto=reto, sesion=sesion, todos=todos)
     print(render_table(report))
     saved = save_report(report)
     print(f"Guardado en runtime/casos/{saved.name} (y runtime/casos/ultimo.json)")
+
+
+def rag_command(evaluar, buscar):
+    """S3 · Paso 2: measure and inspect the retrieval configured in mi_agente/rag.toml."""
+    from carrito import rag
+    from carrito.student import load_rag_config
+
+    try:
+        config = load_rag_config() or dict(rag.DEFAULTS)
+    except rag.ConfigError as exc:
+        print(f"⚠️  {exc}")
+        raise SystemExit(1) from None
+    if buscar:
+        print(rag.render_search(buscar, rag.search(buscar, config)))
+    if evaluar or not buscar:
+        print(rag.render_evaluation(rag.evaluate(config)))
+
+
+SOLUTIONS = {
+    "s3": ("s2", ROOT / "sessions" / "02_context" / "solucion"),
+}
+
+
+def empezar(sesion):
+    """Start a session from the published solution of the previous one. Keeps a backup."""
+    import shutil
+
+    previous, source = SOLUTIONS[sesion]
+    if not source.exists():
+        print("Todavía no tienes la solución de la sesión anterior. Ejecuta antes: git pull")
+        raise SystemExit(1)
+    target = ROOT / "mi_agente"
+    backup = ROOT / f"mi_agente_{previous}"
+    n = 2
+    while backup.exists():
+        backup = ROOT / f"mi_agente_{previous}_{n}"
+        n += 1
+    shutil.copytree(target, backup)
+    copied = []
+    for path in sorted(source.iterdir()):
+        if path.is_file() and path.name != "README.md":
+            shutil.copy2(path, target / path.name)
+            copied.append(path.name)
+    print(f"Tu versión anterior está guardada en {backup.name}/.")
+    print(f"mi_agente/ parte ahora de la solución de {previous.upper()}: {', '.join(copied)}.")
+    print("Comprueba: uv run carrito agente --debug")
+
+
+def pista(codigo):
+    """Next hint for a lab, for example `carrito pista s3-2`. Each call shows one more."""
+    sesion, _, lab = codigo.partition("-")
+    folders = {"s3": "03_retrieval_tools", "s4": "04_agents_state", "s5": "05_capstone"}
+    path = ROOT / "sessions" / folders.get(sesion, "?") / "pistas.json"
+    if not path.exists() or not lab:
+        print("Usa: uv run carrito pista s3-2   (sesión 3, lab 2)")
+        return
+    hints = json.loads(path.read_text()).get(lab)
+    if not hints:
+        print(f"No hay pistas para el lab {lab} de {sesion}.")
+        return
+    state_file = ROOT / "runtime" / "pistas.json"
+    state = json.loads(state_file.read_text()) if state_file.exists() else {}
+    seen = state.get(codigo, 0)
+    shown = min(seen + 1, len(hints))
+    for k, hint in enumerate(hints[:shown], 1):
+        print(f"Pista {k}/{len(hints)}: {hint}")
+    state[codigo] = shown
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text(json.dumps(state))
 
 
 def main():
@@ -209,13 +318,32 @@ def main():
     agente.add_argument("--debug", action="store_true", help="muestra lo que ve el modelo")
     agente.add_argument("--pregunta", help="una sola pregunta y sale")
     agente.add_argument("--user", choices=["user1", "user2"], default="user1")
+    agente.add_argument(
+        "--motor",
+        choices=["carrito", "langchain"],
+        default="carrito",
+        help="S3: quién hace el loop",
+    )
+    rag_parser = sub.add_parser("rag", help="S3: mide y prueba la búsqueda de mi_agente/rag.toml")
+    rag_parser.add_argument(
+        "--evaluar", action="store_true", help="aciertos y tokens (12 preguntas)"
+    )
+    rag_parser.add_argument("--buscar", help="qué piezas encuentra para una pregunta")
+    start = sub.add_parser("empezar", help="empieza una sesión desde la solución de la anterior")
+    start.add_argument("sesion", choices=sorted(SOLUTIONS))
+    hint = sub.add_parser("pista", help="la siguiente pista de un lab: carrito pista s3-2")
+    hint.add_argument("codigo")
     cases = sub.add_parser("casos", help="S2: marcador de casos de tu agente")
     cases.add_argument("--debug", action="store_true")
     cases.add_argument("--caso", action="append", help="ejecuta solo este caso (C1...)")
     cases.add_argument(
         "--comparar", action="store_true", help="compara las dos últimas ejecuciones"
     )
-    cases.add_argument("--reto", action="store_true", help="añade los casos del reto (C9-C12)")
+    cases.add_argument("--reto", action="store_true", help="S2: añade los casos del reto (C9-C12)")
+    cases.add_argument(
+        "--sesion", type=int, choices=[2, 3], default=2, help="marcador de la sesión"
+    )
+    cases.add_argument("--todos", action="store_true", help="todos los casos de todas las sesiones")
     evaluate = sub.add_parser("eval")
     evaluate.add_argument("--split", choices=["dev"], default="dev")
     evaluate.add_argument("--mode", choices=["fixture", "live"], default="live")
@@ -257,9 +385,18 @@ def main():
     elif args.command == "chat":
         chat(args.mode, args.trace_dir)
     elif args.command == "agente":
-        mi_agente(args.debug, args.pregunta, args.user)
+        if args.motor == "langchain":
+            mi_agente_langchain(args.debug, args.pregunta, args.user)
+        else:
+            mi_agente(args.debug, args.pregunta, args.user)
+    elif args.command == "rag":
+        rag_command(args.evaluar, args.buscar)
+    elif args.command == "empezar":
+        empezar(args.sesion)
+    elif args.command == "pista":
+        pista(args.codigo)
     elif args.command == "casos":
-        casos(args.debug, args.caso, args.comparar, args.reto)
+        casos(args.debug, args.caso, args.comparar, args.reto, args.sesion, args.todos)
     elif args.command == "eval":
         report = run_evals(args.split, args.mode, args.trace_dir)
         show(report)
