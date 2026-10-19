@@ -12,7 +12,7 @@ En `mi_agente/agente.toml`, sección `[limites]`:
 | `max_tools` | Llamadas a tools por turno |
 | `max_tokens` | Tokens por turno |
 
-Prueba C28 con los valores por defecto. ¿Termina? Ajusta los límites: suficientes para la tarea, no más.
+Prueba C28 con los valores por defecto y cuenta las tools que llama. Después baja `max_tools` a 2 y repite: ¿en qué estado termina? Elige tus límites: suficientes para la tarea más larga, y bajos para cortar un bucle.
 
 ## Lab 2 · Rutas: workflow antes del agente
 
@@ -48,6 +48,11 @@ Compara tokens con `uv run carrito casos --sesion 4` y `--comparar`. Cuidado con
 ## Reto
 
 `uv run carrito casos --sesion 4`: 8 casos (C21–C28). Gana quien pase más casos con menos tokens.
+
+Algunos casos miran el diseño, no solo la respuesta:
+
+- C22, C23 y C27 tienen un máximo de tokens: sin una ruta, el agente gasta demasiado.
+- C24 pide salida estructurada: `revisar()` tiene que estar escrito (Lab 3).
 
 ## Debes poder explicar
 

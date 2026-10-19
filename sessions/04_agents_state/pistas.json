@@ -1,8 +1,8 @@
 {
   "1": [
-    "Ejecuta: uv run carrito casos --caso C28 --debug. Mira la línea «Ruta: … estado:». Si dice step_limit, faltan pasos.",
-    "Cada respuesta del modelo es un paso. Si pide los plazos de uno en uno, necesita 1 (mis_pedidos) + 5 (plazos) + 1 (respuesta) pasos.",
-    "Prueba max_pasos = 8. Y baja max_tools a 10: suficiente para la tarea, y corta un bucle."
+    "Ejecuta: uv run carrito casos --caso C28 --debug. Mira la línea «Ruta: … estado:» y cuenta las tools que llama.",
+    "El modelo pide los plazos de varios pedidos a la vez, en paralelo: por eso termina con pocos pasos. Baja max_tools a 2 y repite: el estado pasa a tool_limit.",
+    "Elige límites con margen para la tarea más larga (C28: 1 mis_pedidos + 7 plazos) y que corten un bucle: por ejemplo max_pasos = 8, max_tools = 10."
   ],
   "2": [
     "Quita los # del ejemplo de agente.toml para activar la ruta fija.",
