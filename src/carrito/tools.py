@@ -36,6 +36,10 @@ class PolicyArgs(Arguments):
     query: str = Field(max_length=500)
 
 
+class NoArgs(Arguments):
+    pass
+
+
 class ReturnArgs(OrderArgs):
     reason: str = Field(min_length=1, max_length=500, pattern=r"\S")
 
@@ -47,13 +51,17 @@ ARGUMENTS = {
     "request_return": ReturnArgs,
 }
 # Tools the student adds from S3 on. They are offered only when the agent asks for them.
-EXTRA_ARGUMENTS = {"plazo_devolucion": OrderArgs}
+EXTRA_ARGUMENTS = {"plazo_devolucion": OrderArgs, "mis_pedidos": NoArgs}
 DESCRIPTIONS = {
     "search_products": "Search the catalog. Prices in cents; optional budget in euros.",
     "get_order": "Read one order belonging to the host's active user.",
     "search_policies": "Retrieve short policy documents with source IDs.",
     "request_return": "Prepare a return request; only host-confirmed exact payloads can write.",
     "plazo_devolucion": "Return deadline of one order of the active user.",
+    "mis_pedidos": (
+        "Lista los pedidos del cliente activo: número, producto, estado y fecha de entrega. "
+        "Úsala cuando el cliente pregunte por sus pedidos sin dar un número. Sin argumentos."
+    ),
 }
 
 
@@ -131,6 +139,16 @@ class StoreTools:
             if score or not tokens:
                 documents.append({"source_id": path.stem, "text": body, "score": score})
         return sorted(documents, key=lambda r: (-r["score"], r["source_id"]))
+
+    def mis_pedidos(self) -> list[dict]:
+        """S4 host tool: the active user's orders (PER-1), with the product name."""
+        rows = self.db.execute(
+            "SELECT o.order_id, o.product_id, p.name, o.status, o.delivered_at "
+            "FROM orders o JOIN products p ON p.product_id = o.product_id "
+            "WHERE o.user_id = ? ORDER BY o.order_id",
+            (self.user_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
 
     def plazo_devolucion(self, order_id: str) -> dict:
         """S3 student tool. The host reads the order (identity, PER-1); the student computes."""

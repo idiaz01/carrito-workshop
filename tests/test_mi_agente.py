@@ -121,3 +121,37 @@ def test_s3_paso3_deadline_rules():
     late = _deadline("102", "2026-08-01")
     assert late["se_puede_devolver"] is False and late["motivo"] == "plazo_vencido"
     assert late["fecha_limite"] == "2026-08-31"
+
+
+# ---------------------------------------------------------------------------
+# S4 · Lab 3 · mi_agente/salida.py
+# ---------------------------------------------------------------------------
+def _review(**fields):
+    from carrito.student import load_student_module
+
+    module = load_student_module("salida")
+    if module is None:
+        raise NotImplementedError("Falta mi_agente/salida.py")
+    answer = {"texto": "Te recomiendo P001.", "fuentes": [], "pide_confirmacion": False}
+    answer.update(fields)
+    return module.revisar(module.Respuesta(**answer), {"P001", "104", "pedido 104"})
+
+
+@TODO
+def test_s4_lab3_good_answer_has_no_problems():
+    assert _review(fuentes=["P001"]) == []
+
+
+@TODO
+def test_s4_lab3_review_rules():
+    assert len(_review(fuentes=["P002"])) == 1  # invented source
+    assert len(_review(texto="x" * 601)) == 1  # too long
+    assert len(_review(pide_confirmacion=True)) == 1  # asks without saying it
+    assert (
+        _review(
+            texto="¿Confirmas la devolución del pedido 104?",
+            fuentes=["104"],
+            pide_confirmacion=True,
+        )
+        == []
+    )

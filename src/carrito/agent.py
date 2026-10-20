@@ -34,6 +34,7 @@ def run_agent(
     tool_descriptions=None,
     format_result=None,
     extra_tools=(),
+    text_format=None,
 ):
     """`tool_descriptions` and `format_result` let S2 students build the agent's context:
     the text of each tool definition and what each tool result looks like for the model.
@@ -131,7 +132,8 @@ def run_agent(
     for step in range(max_steps):
         started = perf_counter()
         try:
-            turn = model.respond(messages, definitions)
+            extra = {"text_format": text_format} if text_format else {}
+            turn = model.respond(messages, definitions, **extra)
         except Exception as exc:
             # Do not put raw SDK exception bodies or credentials in traces.
             hint = explain_api_error(exc)

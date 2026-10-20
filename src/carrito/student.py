@@ -13,11 +13,17 @@ import re
 import uuid
 from pathlib import Path
 
-from carrito import rag, trazas
+from carrito import diseno, rag, trazas
 from carrito.agent import run_agent
 from carrito.model import OpenAIModel
 from carrito.store import REFERENCE_DATE, create_store
-from carrito.tools import ARGUMENTS, EXTRA_ARGUMENTS, StoreTools, tool_definitions
+from carrito.tools import (
+    ARGUMENTS,
+    DESCRIPTIONS,
+    EXTRA_ARGUMENTS,
+    StoreTools,
+    tool_definitions,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 # CARRITO_MI_AGENTE points to another folder (for example, the teacher's reference version).
@@ -100,6 +106,22 @@ def load_student_module(name="contexto"):
     return module
 
 
+def load_design():
+    """S4. None while mi_agente/agente.toml does not exist (S3 behaviour)."""
+    return diseno.load(FOLDER / "agente.toml")
+
+
+SAMPLE_ANSWER = {"texto": "Hola", "fuentes": [], "pide_confirmacion": False}
+
+
+def output_status():
+    """S4 · Lab 3. Raises NotImplementedError while revisar() is not written."""
+    module = load_student_module("salida")
+    if module is None or not hasattr(module, "Respuesta") or not hasattr(module, "revisar"):
+        raise NotImplementedError("Falta mi_agente/salida.py con Respuesta y revisar")
+    return module.revisar(module.Respuesta(**SAMPLE_ANSWER), set())
+
+
 def load_rag_config():
     """S3 · Paso 2. None while mi_agente/rag.toml does not exist (S2 behaviour)."""
     return rag.load_config(FOLDER / "rag.toml")
@@ -166,9 +188,21 @@ def estimate_tokens(text):
 
 
 class StudentTools(StoreTools):
-    """The store tools, with each call traced as a LangSmith "tool" run when tracing is on."""
+    """The store tools, with each call traced as a LangSmith "tool" run when tracing is on.
+
+    S4: when a subagent is active, search_policies goes to the subagent (once; the subagent
+    itself uses the real search)."""
+
+    subagent = None
+    _inside_subagent = False
 
     def dispatch(self, name, arguments):
+        if name == "search_policies" and self.subagent and not self._inside_subagent:
+            self._inside_subagent = True
+            try:
+                return self.subagent(arguments.get("query", ""))
+            finally:
+                self._inside_subagent = False
         traced = trazas.traceable(run_type="tool", name=name)(super().dispatch)
         return traced(name, arguments)
 
@@ -270,9 +304,127 @@ class StudentAgent:
             traced = trazas.traceable(run_type="chain", name="Carrito · turno")(self._ask)
             return traced(text, max_steps)
 
+    def _configure_design(self, descriptions):
+        """S4: limits, routes and subagent from agente.toml. Returns (design, extra tools)."""
+        try:
+            design = load_design()
+        except diseno.ConfigError as exc:
+            self.warn(f"⚠️  {exc}. Uso el diseño de S3.")
+            design = None
+        self.tools.subagent = None
+        if design is None:
+            return None, ()
+        # From S4 on, the application also offers mis_pedidos (the user's orders).
+        descriptions.setdefault("mis_pedidos", DESCRIPTIONS["mis_pedidos"])
+        if design["subagente"]["activo"]:
+            self.tools.subagent = self._make_subagent(descriptions)
+        return design, ("mis_pedidos",)
+
+    def _make_subagent(self, descriptions):
+        prompt = _read("subagente.md") or "Eres un ayudante."
+        formatter = self._formatter(load_student_module())
+
+        @trazas.traceable(run_type="chain", name="subagente · documentos")
+        def subagent(query):
+            run = run_agent(
+                query,
+                self.tools,
+                self.model,
+                max_steps=3,
+                history=[{"role": "system", "content": prompt}],
+                enable_skills=False,
+                tool_descriptions=descriptions,
+                format_result=formatter,
+                allowed_tools=["search_policies"],
+            )
+            usage = [e["usage"] for e in run["events"] if e["type"] == "model_response"]
+            self._subagent_usage += usage
+            sources = sorted(diseno.seen_ids(run["events"]))
+            return {"resumen": run["answer"], "fuentes": sources}
+
+        return subagent
+
+    def _formatter(self, module):
+        def formatter(name, result):
+            return self._student(
+                module,
+                "format_tool_result",
+                lambda: _dumps(result),
+                name,
+                result,
+                check=lambda v: isinstance(v, str),
+            )
+
+        return formatter
+
+    def _fixed_route(self, route):
+        return {
+            "answer": route["respuesta"].strip(),
+            "status": "completed",
+            "events": [],
+            "messages": [],
+        }
+
+    def _search_route(self, text, context, formatter):
+        """Workflow: always search, then ONE model call without tools."""
+        results = self.tools.search_policies(text)
+        seen = formatter("search_policies", results)
+        events = [
+            {
+                "type": "tool_result",
+                "name": "search_policies",
+                "arguments": text,
+                "result": results,
+                "model_sees": seen,
+                "by": "workflow",
+            }
+        ]
+        messages = [
+            *context,
+            {"role": "system", "content": f"Documentos encontrados:\n{seen}"},
+            {"role": "user", "content": text},
+        ]
+        turn = self.model.respond(messages, [])
+        events.append({"type": "model_response", "usage": turn.usage, "text": turn.text})
+        return {"answer": turn.text, "status": turn.status, "events": events, "messages": messages}
+
+    def _structured(self, run, schema_module, text_format):
+        """S4 · Lab 3: parse the JSON answer, run the student's revisar(), fix once."""
+        report = {"fuentes": [], "problemas": [], "corregida": False}
+        try:
+            answer = schema_module.Respuesta.model_validate_json(run["answer"])
+        except Exception:  # noqa: BLE001 - the model did not follow the schema
+            report["problemas"] = ["La respuesta no sigue el formato de Respuesta."]
+            return run["answer"], report
+        problems = self._student(
+            schema_module,
+            "revisar",
+            lambda: [],
+            answer,
+            diseno.seen_ids(run["events"]),
+            check=lambda v: isinstance(v, list),
+        )
+        if problems:
+            report["problemas"] = list(problems)
+            fix = [
+                *run["messages"],
+                {"role": "system", "content": "Corrige tu respuesta: " + " ".join(problems)},
+            ]
+            turn = self.model.respond(fix, [], text_format=text_format)
+            run["events"].append({"type": "model_response", "usage": turn.usage, "text": turn.text})
+            try:
+                answer = schema_module.Respuesta.model_validate_json(turn.text)
+                report["corregida"] = True
+            except Exception:  # noqa: BLE001
+                pass
+        report["fuentes"] = list(answer.fuentes)
+        report["pide_confirmacion"] = answer.pide_confirmacion
+        return answer.texto, report
+
     def _ask(self, text, max_steps=5):
         module = load_student_module()
         self.uses = {}
+        self._subagent_usage = []
         state = self._student(
             module,
             "update_state",
@@ -293,29 +445,53 @@ class StudentAgent:
         descriptions = load_tool_descriptions()
         self._configure_rag()
         extra = self._configure_tools(descriptions)
-
-        def formatter(name, result):
-            return self._student(
-                module,
-                "format_tool_result",
-                lambda: _dumps(result),
-                name,
-                result,
-                check=lambda v: isinstance(v, str),
-            )
-
+        design, design_extra = self._configure_design(descriptions)
+        extra = tuple(extra) + tuple(design_extra)
+        formatter = self._formatter(module)
         context = [{"role": "system", "content": system}, *history]
-        run = run_agent(
-            text,
-            self.tools,
-            self.model,
-            max_steps=max_steps,
-            history=context,
-            enable_skills=False,
-            tool_descriptions=descriptions,
-            format_result=formatter,
-            extra_tools=extra,
-        )
+
+        route = diseno.choose_route(text, design["rutas"]) if design else None
+        limits = design["limites"] if design else {"max_pasos": max_steps}
+        structured = None
+        if route and route["tipo"] == "fija":
+            run = self._fixed_route(route)
+        elif route and route["tipo"] == "buscar":
+            run = self._search_route(text, context, formatter)
+        else:
+            schema_module, text_format = None, None
+            if design is not None:
+                try:
+                    output_status()
+                    schema_module = load_student_module("salida")
+                    text_format = diseno.strict_schema(schema_module.Respuesta)
+                    self.uses["revisar"] = "tuya"
+                except NotImplementedError:
+                    self.uses["revisar"] = "por defecto"
+                except Exception as exc:  # noqa: BLE001
+                    self.uses["revisar"] = "error"
+                    self.warn(f"⚠️  Error en tu salida.py: {type(exc).__name__}: {exc}")
+            options = {}
+            if design is not None:
+                options = {
+                    "max_tool_calls": limits["max_tools"],
+                    "max_total_tokens": limits["max_tokens"],
+                }
+            run = run_agent(
+                text,
+                self.tools,
+                self.model,
+                max_steps=limits["max_pasos"],
+                history=context,
+                enable_skills=False,
+                tool_descriptions=descriptions,
+                format_result=formatter,
+                extra_tools=extra,
+                text_format=text_format,
+                **options,
+            )
+            if text_format and run["status"] == "completed":
+                answer, structured = self._structured(run, schema_module, text_format)
+                run["answer"] = answer
         tool_events = [e for e in run["events"] if e["type"] == "tool_result"]
         self.turns.append(
             {
@@ -330,14 +506,29 @@ class StudentAgent:
         self.state = state
         definitions = tool_definitions(descriptions, extra=extra)
         usage = [e["usage"] for e in run["events"] if e["type"] == "model_response"]
+        sub = self._subagent_usage
         report = {
             "prompt_version": version,
             "uses": dict(self.uses),
             "state": state,
             "rag": self.rag_config,
+            "status": run["status"],
+            "ruta": (route or {}).get("tipo", "agente") if design else None,
+            "limites": design["limites"] if design else None,
+            "salida": structured,
+            "subagente": (
+                {
+                    "llamadas": len(sub),
+                    "tokens": sum(
+                        u.get("input_tokens", 0) + u.get("output_tokens", 0) for u in sub
+                    ),
+                }
+                if self.tools.subagent
+                else None
+            ),
             "blocks": {
                 "system": estimate_tokens(system),
-                "tools": estimate_tokens(_dumps(definitions)),
+                "tools": estimate_tokens(_dumps(definitions)) if not route else 0,
                 "historial": estimate_tokens(_dumps(history)),
                 "pregunta": estimate_tokens(text),
                 "resultados": estimate_tokens(
@@ -352,10 +543,13 @@ class StudentAgent:
                 }
                 for e in tool_events
             ],
-            "model_calls": len(usage),
-            "input_tokens": sum(u.get("input_tokens", 0) for u in usage),
-            "output_tokens": sum(u.get("output_tokens", 0) for u in usage),
+            "model_calls": len(usage) + len(sub),
+            "input_tokens": sum(u.get("input_tokens", 0) for u in usage + sub),
+            "output_tokens": sum(u.get("output_tokens", 0) for u in usage + sub),
         }
+        if route and route["tipo"] == "fija":
+            # A fixed route never calls the model: nothing was sent, nothing is paid.
+            report["blocks"] = dict.fromkeys(report["blocks"], 0)
         return {
             "answer": run["answer"],
             "status": run["status"],
@@ -389,6 +583,23 @@ def render_report(report, turn):
             arguments = str(call["arguments"])
         lines.append(f"  → {call['name']} {arguments}")
         lines.append(f"    ← el modelo ve {len(call['model_sees'])} caracteres: {preview[:110]}")
+    if report.get("ruta"):
+        lim = report["limites"]
+        lines.append(
+            f"  Ruta: {report['ruta']} · límites: {lim['max_pasos']} pasos, "
+            f"{lim['max_tools']} tools, {lim['max_tokens']} tokens · estado: {report['status']}"
+        )
+    if report.get("salida"):
+        out = report["salida"]
+        lines.append(
+            f"  Salida: fuentes={out['fuentes']} · problemas={out['problemas'] or 'ninguno'}"
+            + (" · corregida" if out["corregida"] else "")
+        )
+    if report.get("subagente"):
+        lines.append(
+            f"  Subagente: {report['subagente']['llamadas']} llamadas · "
+            f"{report['subagente']['tokens']} tokens (incluidos en API)"
+        )
     if report.get("rag"):
         c = report["rag"]
         lines.append(

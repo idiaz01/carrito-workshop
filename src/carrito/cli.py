@@ -169,7 +169,10 @@ def mi_agente(debug, question, user):
     except ValueError:
         where = FOLDER
     turn = 0
-    print(f"Tu agente · {where}/. /reset empieza otra conversación; /salir sale.")
+    print(
+        f"Tu agente · {where}/. /reset empieza otra conversación; /confirmar confirma una"
+        " devolución; /salir sale."
+    )
     try:
         while True:
             if question is not None:
@@ -186,6 +189,15 @@ def mi_agente(debug, question, user):
                 agent = StudentAgent(user_id=user)
                 turn = 0
                 print("Conversación nueva.")
+                continue
+            if prompt == "/confirmar":
+                # S4 · Human in the loop: the PERSON confirms, never the model.
+                result = confirm_host(agent.tools)
+                if "error" in result:
+                    print("No hay ninguna solicitud pendiente de confirmar.\n")
+                else:
+                    payload = json.dumps(result, ensure_ascii=False)
+                    print(f"Aplicación> Solicitud registrada: {payload}\n")
                 continue
             if not prompt:
                 continue
@@ -249,6 +261,7 @@ def rag_command(evaluar, buscar):
 
 SOLUTIONS = {
     "s3": ("s2", ROOT / "sessions" / "02_context" / "solucion"),
+    "s4": ("s3", ROOT / "sessions" / "03_retrieval_tools" / "solucion"),
 }
 
 
@@ -341,7 +354,7 @@ def main():
     )
     cases.add_argument("--reto", action="store_true", help="S2: añade los casos del reto (C9-C12)")
     cases.add_argument(
-        "--sesion", type=int, choices=[2, 3], default=2, help="marcador de la sesión"
+        "--sesion", type=int, choices=[2, 3, 4], default=2, help="marcador de la sesión"
     )
     cases.add_argument("--todos", action="store_true", help="todos los casos de todas las sesiones")
     evaluate = sub.add_parser("eval")

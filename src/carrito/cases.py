@@ -9,7 +9,11 @@ from carrito.student import ROOT, StudentAgent
 CASES = ROOT / "evals" / "s2_casos.jsonl"
 RETO = ROOT / "evals" / "s2_reto.jsonl"
 # The scoreboard of each session. S2 also has its reto (C9-C12).
-SESSIONS = {2: [CASES], 3: [ROOT / "evals" / "s3_casos.jsonl"]}
+SESSIONS = {
+    2: [CASES],
+    3: [ROOT / "evals" / "s3_casos.jsonl"],
+    4: [ROOT / "evals" / "s4_casos.jsonl"],
+}
 RESULTS = ROOT / "runtime" / "casos"
 
 
@@ -17,7 +21,9 @@ def load_cases(path=CASES):
     return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
 
 
-def check_case(case, answer, tools_called):
+def check_case(case, answer, tools_called, info=None):
+    """info (S4): {"tokens": tokens of the case, "salida": the Salida line of --debug}."""
+    info = info or {}
     text = answer.lower()
     failures = []
     for check in case["checks"]:
@@ -41,6 +47,14 @@ def check_case(case, answer, tools_called):
                 failures.append("dice " + ", ".join(found))
         elif kind == "max_chars" and len(answer) > check["value"]:
             failures.append(f"{len(answer)} caracteres (máx. {check['value']})")
+        elif kind == "presupuesto" and info.get("tokens", 0) > check["value"]:
+            failures.append(f"gastó {info['tokens']} tokens (máx. {check['value']})")
+        elif kind == "salida":
+            out = info.get("salida")
+            if not out:
+                failures.append("sin salida estructurada (salida.py)")
+            elif out["problemas"] and not out["corregida"]:
+                failures.append("revisar() encontró problemas sin corregir")
     return failures
 
 
@@ -64,7 +78,7 @@ def run_cases(model_factory=None, only=None, on_turn=None, reto=False, sesion=2,
         if only and case["id"] not in only:
             continue
         agent = StudentAgent(model=model_factory() if model_factory else None, warn=lambda m: None)
-        answer, tools_called, tokens, estimated = "", [], 0, 0
+        answer, tools_called, tokens, estimated, salida = "", [], 0, 0, None
         try:
             for turn, text in enumerate(case["turns"], 1):
                 result = agent.ask(text)
@@ -73,11 +87,14 @@ def run_cases(model_factory=None, only=None, on_turn=None, reto=False, sesion=2,
                 tools_called += [c["name"] for c in report["calls"]]
                 tokens += report["input_tokens"] + report["output_tokens"]
                 estimated += sum(report["blocks"].values())
+                salida = report.get("salida")
                 if on_turn:
                     on_turn(case, turn, text, result)
         finally:
             agent.close()
-        failures = check_case(case, answer, tools_called)
+        failures = check_case(
+            case, answer, tools_called, {"tokens": tokens or estimated, "salida": salida}
+        )
         rows.append(
             {
                 "id": case["id"],

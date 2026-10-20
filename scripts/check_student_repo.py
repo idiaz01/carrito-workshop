@@ -18,7 +18,7 @@ DOCS = {"setup.md", "architecture.md", "references.md"}
 SCRIPTS = {"check_notebooks.py", "check_student_repo.py"}
 EVALS = {
     "README.md", "rubrics.md", "dev.jsonl", "s2_casos.jsonl", "s2_reto.jsonl",
-    "s3_casos.jsonl", "s3_rag.jsonl",
+    "s3_casos.jsonl", "s3_rag.jsonl", "s4_casos.jsonl",
 }
 INTERNAL = re.compile(
     r"docs/(?:guiones|revision|research|output)|instructor-guide|evals/instructor|"
