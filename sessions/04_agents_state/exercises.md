@@ -34,7 +34,7 @@ Compara tokens con `uv run carrito casos --sesion 4` y `--comparar`. Cuidado con
 ## Lab 3 · Salida estructurada y guardrail
 
 1. Lee la clase `Respuesta` de `mi_agente/salida.py`: es la forma de la respuesta final.
-2. En `revisar`, borra `raise NotImplementedError` y rellena los `___`.
+2. Escribe la función `revisar`: borra `raise NotImplementedError` y añade una comprobación por cada regla del comentario.
 3. Comprueba: `uv run pytest tests/test_mi_agente.py --runxfail -q -k s4`.
 4. En `--debug`, mira la línea «Salida»: fuentes, problemas y si se corrigió.
 
