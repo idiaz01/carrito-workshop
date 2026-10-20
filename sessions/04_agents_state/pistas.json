@@ -11,13 +11,19 @@
     "Cuidado: «¿Cuál es el estado del envío de mi pedido 103?» contiene «envío», pero necesita get_order. Elige bien las palabras."
   ],
   "3": [
-    "Borra la línea raise NotImplementedError. Después rellena los ___ uno a uno.",
-    "Regla 1: la fuente tiene que estar en vistos. Regla 2: el máximo son 600 caracteres.",
-    "Regla 3: el campo se llama pide_confirmacion (míralo en la clase Respuesta)."
+    "Borra raise NotImplementedError. Empieza con problemas = [] y termina con return problemas. Entre medias, una comprobación por regla.",
+    "Regla 1: for fuente in respuesta.fuentes: y dentro, if fuente not in vistos: problemas.append(\"Citas ..., pero no sale de ninguna tool. No la cites.\")",
+    "Regla 2: if len(respuesta.texto) > 600: … Regla 3: if respuesta.pide_confirmacion and \"confirm\" not in respuesta.texto.lower(): …"
   ],
   "4": [
     "Escribe en subagente.md: qué hace, qué devuelve (un resumen corto con IDs) y qué hacer si no encuentra nada.",
     "Activa el subagente: [subagente] activo = true en agente.toml.",
     "En --debug, la línea «Subagente» dice cuántas llamadas y tokens gasta. En LangSmith, busca la rama «subagente · documentos»."
+  ],
+  "reto": [
+    "Los casos C29–C32 son trampas: con las rutas del Lab 2, fallan. Ejecuta uv run carrito casos --caso C29 --debug y mira la línea «Ruta».",
+    "La ruta atrapa el mensaje por una palabra («envío», «garantía», «canción»), pero la pregunta necesita una tool: el pedido, el catálogo, el precio de un producto.",
+    "Quitar la palabra de la ruta arregla la trampa, pero C23 o C27 pueden pasar de su máximo de tokens. Mejor: excepto. Mira el comentario de agente.toml.",
+    "Ruta buscar: excepto con las palabras de «mis pedidos» y de un total. Ruta fija: excepto con palabras de compra, como \"recomendáis\" o \"comprar\". Después: --sesion 4 y --todos."
   ]
 }

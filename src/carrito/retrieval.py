@@ -16,7 +16,7 @@ EXPANSIONS = {
 def load_chunks():
     rows = []
     for path in sorted((ROOT / "data" / "policies").glob("*.md")):
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         # Policies are already short semantic units: preserve each complete policy.
         rows.append(
             {
@@ -46,7 +46,7 @@ def retrieve(query, chunks, top_k=2, expand=False):
 
 
 def retrieval_report(chunks=None, top_k=2, expand=False):
-    cases = json.loads((ROOT / "data" / "retrieval-cases.json").read_text())
+    cases = json.loads((ROOT / "data" / "retrieval-cases.json").read_text(encoding="utf-8"))
     rows = []
     for case in cases:
         hits = retrieve(case["query"], chunks or load_chunks(), top_k, expand)

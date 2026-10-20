@@ -23,7 +23,8 @@ def test_rag_config_validation(tmp_path):
     path = tmp_path / "rag.toml"
     path.write_text(
         '[documentos]\nfuentes = ["politicas", "ayuda"]\ntrocear = "seccion"\n'
-        '[busqueda]\nmetodo = "lexico"\ntop_k = 3\n'
+        '[busqueda]\nmetodo = "lexico"\ntop_k = 3\n',
+        encoding="utf-8",
     )
     assert rag.load_config(path) == {
         "fuentes": ["politicas", "ayuda"],
@@ -31,7 +32,7 @@ def test_rag_config_validation(tmp_path):
         "metodo": "lexico",
         "top_k": 3,
     }
-    path.write_text('[documentos]\ntrocear = "capitulo"\n')
+    path.write_text('[documentos]\ntrocear = "capitulo"\n', encoding="utf-8")
     with pytest.raises(rag.ConfigError, match="trocear"):
         rag.load_config(path)
 
@@ -69,13 +70,15 @@ def test_hybrid_and_embeddings_run_offline():
 def test_agent_uses_rag_and_the_student_tool(tmp_path, monkeypatch):
     (tmp_path / "tools.md").write_text(
         "## search_policies\nBusca en políticas y ayuda.\n\n"
-        "## plazo_devolucion\nCalcula hasta qué día se puede devolver un pedido.\n"
+        "## plazo_devolucion\nCalcula hasta qué día se puede devolver un pedido.\n",
+        encoding="utf-8",
     )
     (tmp_path / "rag.toml").write_text(
         '[documentos]\nfuentes = ["politicas", "ayuda"]\ntrocear = "seccion"\n'
-        '[busqueda]\nmetodo = "lexico"\ntop_k = 2\n'
+        '[busqueda]\nmetodo = "lexico"\ntop_k = 2\n',
+        encoding="utf-8",
     )
-    (tmp_path / "herramientas.py").write_text(SOLVED_TOOL)
+    (tmp_path / "herramientas.py").write_text(SOLVED_TOOL, encoding="utf-8")
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     calls = [
         [
@@ -107,7 +110,7 @@ def test_agent_uses_rag_and_the_student_tool(tmp_path, monkeypatch):
 
 
 def test_student_tool_hidden_until_described(tmp_path, monkeypatch):
-    (tmp_path / "herramientas.py").write_text(SOLVED_TOOL)
+    (tmp_path / "herramientas.py").write_text(SOLVED_TOOL, encoding="utf-8")
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     agent = student.StudentAgent(model=FixtureModel([[]], final_text="Hola"), warn=print)
     result = agent.ask("Hola")
@@ -130,7 +133,9 @@ def test_langchain_tools_share_store_and_format(tmp_path, monkeypatch):
     pytest.importorskip("langchain_core")
     from carrito.langchain_agente import build_tools
 
-    (tmp_path / "contexto.py").write_text("def format_tool_result(name, result):\n    return 'X'\n")
+    (tmp_path / "contexto.py").write_text(
+        "def format_tool_result(name, result):\n    return 'X'\n", encoding="utf-8"
+    )
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     helper = student.StudentAgent(model=object())
     tools = build_tools(helper, student.load_tool_descriptions())
@@ -145,20 +150,20 @@ def test_pista_and_empezar(tmp_path, monkeypatch, capsys):
 
     root = tmp_path
     (root / "mi_agente").mkdir()
-    (root / "mi_agente" / "system.md").write_text("mío")
+    (root / "mi_agente" / "system.md").write_text("mío", encoding="utf-8")
     solution = root / "sessions" / "02_context" / "solucion"
     solution.mkdir(parents=True)
-    (solution / "system.md").write_text("solución")
-    (solution / "README.md").write_text("no se copia")
+    (solution / "system.md").write_text("solución", encoding="utf-8")
+    (solution / "README.md").write_text("no se copia", encoding="utf-8")
     monkeypatch.setattr(cli, "ROOT", root)
     monkeypatch.setattr(cli, "SOLUTIONS", {"s3": ("s2", solution)})
     cli.empezar("s3")
-    assert (root / "mi_agente" / "system.md").read_text() == "solución"
-    assert (root / "mi_agente_s2" / "system.md").read_text() == "mío"
+    assert (root / "mi_agente" / "system.md").read_text(encoding="utf-8") == "solución"
+    assert (root / "mi_agente_s2" / "system.md").read_text(encoding="utf-8") == "mío"
     assert not (root / "mi_agente" / "README.md").exists()
     hints = root / "sessions" / "03_retrieval_tools"
     hints.mkdir(parents=True)
-    (hints / "pistas.json").write_text(json.dumps({"2": ["uno", "dos"]}))
+    (hints / "pistas.json").write_text(json.dumps({"2": ["uno", "dos"]}), encoding="utf-8")
     cli.pista("s3-2")
     cli.pista("s3-2")
     out = capsys.readouterr().out

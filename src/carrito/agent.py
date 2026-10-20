@@ -56,12 +56,12 @@ def run_agent(
     path = Path(trace_path) if trace_path else None
     if path:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("")
+        path.write_text("", encoding="utf-8")
 
     def emit(event):
         events.append(event)
         if path:
-            with path.open("a") as handle:
+            with path.open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(event, ensure_ascii=False) + "\n")
 
     def record_tool_result(call, result, latency_ms=0.0):
