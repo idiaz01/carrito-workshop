@@ -28,30 +28,25 @@ def revisar(respuesta, vistos):
                   {"P001", "POL-DEV", "104", "pedido 104"}
 
     Devuelve una lista de problemas (textos). Lista vacía = la respuesta está bien.
-    Si hay problemas, la aplicación pide al modelo UNA corrección.
+    Si hay problemas, la aplicación se los manda al modelo y le pide UNA corrección.
+    Escribe cada problema para el modelo: qué está mal y qué tiene que hacer.
 
     Reglas:
       1. Cada fuente citada tiene que estar en vistos. Si no, el agente la ha inventado.
-      2. El texto tiene como máximo 600 caracteres (RESP-3).
+      2. El texto tiene como máximo 600 caracteres (RESP-3: cuatro frases).
       3. Si pide_confirmacion es True, el texto tiene que decir "confirm" (confirma, confirmación…).
 
-    Cómo hacerlo: borra la línea `raise NotImplementedError` y rellena los ___ de abajo.
+    Ejemplo:
+      revisar(Respuesta(texto="Te recomiendo P001.", fuentes=["P002"], pide_confirmacion=False),
+              {"P001"})
+      → ["Citas P002, pero no sale de ninguna tool. No la cites."]
+
+    Cómo hacerlo: borra la línea `raise NotImplementedError` y escribe la función.
+    Empieza con una lista vacía, añade un problema por cada regla que no se cumple
+    y devuelve la lista. Comprueba: uv run pytest tests/test_mi_agente.py --runxfail -q -k s4
     """
-    raise NotImplementedError  # ← borra esta línea
+    raise NotImplementedError  # ← borra esta línea y escribe tu código
 
     problemas = []
-
-    # Regla 1
-    for fuente in respuesta.fuentes:
-        if fuente not in ___:
-            problemas.append(f"Citas {fuente}, pero no sale de ninguna tool. No la cites.")
-
-    # Regla 2: len(texto) es el número de caracteres
-    if len(respuesta.texto) > ___:
-        problemas.append("La respuesta es demasiado larga. Máximo cuatro frases.")
-
-    # Regla 3
-    if respuesta.___ and "confirm" not in respuesta.texto.lower():
-        problemas.append("Pides confirmación, pero el texto no se lo dice al cliente.")
-
+    # Tu código aquí: una comprobación por cada regla.
     return problemas
