@@ -22,8 +22,8 @@
   ],
   "reto": [
     "Los casos C29–C32 son trampas: con las rutas del Lab 2, fallan. Ejecuta uv run carrito casos --caso C29 --debug y mira la línea «Ruta».",
-    "La ruta atrapa el mensaje por una palabra («envío», «garantía», «canción»), pero la pregunta necesita una tool: el pedido 103, el pedido 102, el catálogo.",
+    "La ruta atrapa el mensaje por una palabra («envío», «garantía», «canción»), pero la pregunta necesita una tool: el pedido, el catálogo, el precio de un producto.",
     "Quitar la palabra de la ruta arregla la trampa, pero C23 o C27 pueden pasar de su máximo de tokens. Mejor: excepto. Mira el comentario de agente.toml.",
-    "Ruta buscar: excepto = [\"mi\", \"mis\", \"pedido\", \"pedidos\"]. Ruta fija: excepto con palabras de compra, como \"recomendáis\" o \"comprar\". Después: --sesion 4 y --todos."
+    "Ruta buscar: excepto con las palabras de «mis pedidos» y de un total. Ruta fija: excepto con palabras de compra, como \"recomendáis\" o \"comprar\". Después: --sesion 4 y --todos."
   ]
 }
