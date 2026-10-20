@@ -50,4 +50,4 @@ def greedy_demo():
 
 def load_tokenization_examples():
     """Read measured, labelled token IDs without installing a tokenizer at lesson time."""
-    return json.loads((ROOT / "data/foundations/tokenization.json").read_text())
+    return json.loads((ROOT / "data/foundations/tokenization.json").read_text(encoding="utf-8"))

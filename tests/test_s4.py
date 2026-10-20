@@ -26,23 +26,23 @@ def call(name, args, cid="c1"):
 
 
 def write_design(folder, body):
-    (folder / "agente.toml").write_text(body)
+    (folder / "agente.toml").write_text(body, encoding="utf-8")
 
 
 def test_design_validation(tmp_path):
     assert diseno.load(tmp_path / "nada.toml") is None
     path = tmp_path / "agente.toml"
-    path.write_text("[limites]\nmax_pasos = 8\n")
+    path.write_text("[limites]\nmax_pasos = 8\n", encoding="utf-8")
     design = diseno.load(path)
     assert design["limites"] == {"max_pasos": 8, "max_tools": 12, "max_tokens": 16000}
     assert design["rutas"] == [] and design["subagente"] == {"activo": False}
-    path.write_text("[limites]\nmax_pasos = 0\n")
+    path.write_text("[limites]\nmax_pasos = 0\n", encoding="utf-8")
     with pytest.raises(diseno.ConfigError, match="max_pasos"):
         diseno.load(path)
-    path.write_text('[[rutas]]\ntipo = "fija"\npalabras = ["poema"]\n')
+    path.write_text('[[rutas]]\ntipo = "fija"\npalabras = ["poema"]\n', encoding="utf-8")
     with pytest.raises(diseno.ConfigError, match="respuesta"):
         diseno.load(path)
-    path.write_text('[rutas]\ntipo = "fija"\npalabras = ["poema"]\n')
+    path.write_text('[rutas]\ntipo = "fija"\npalabras = ["poema"]\n', encoding="utf-8")
     with pytest.raises(diseno.ConfigError, match="dos corchetes"):
         diseno.load(path)
 
@@ -104,7 +104,7 @@ def test_limits_stop_the_loop_and_mis_pedidos_is_offered(tmp_path, monkeypatch):
 
 def test_structured_answer_is_reviewed_and_fixed_once(tmp_path, monkeypatch):
     write_design(tmp_path, "[limites]\nmax_pasos = 4\n")
-    (tmp_path / "salida.py").write_text(SOLVED_REVIEW)
+    (tmp_path / "salida.py").write_text(SOLVED_REVIEW, encoding="utf-8")
     monkeypatch.setattr(student, "FOLDER", tmp_path)
 
     class Scripted(FixtureModel):
@@ -142,7 +142,7 @@ def test_structured_answer_is_reviewed_and_fixed_once(tmp_path, monkeypatch):
 
 def test_subagent_answers_search_policies_with_a_summary(tmp_path, monkeypatch):
     write_design(tmp_path, "[subagente]\nactivo = true\n")
-    (tmp_path / "subagente.md").write_text("Resume en una frase y cita el ID.")
+    (tmp_path / "subagente.md").write_text("Resume en una frase y cita el ID.", encoding="utf-8")
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     turns = [
         [call("search_policies", {"query": "garantía"}, "main")],  # main agent

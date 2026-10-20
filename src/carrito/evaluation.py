@@ -11,7 +11,7 @@ from carrito.tools import StoreTools
 def load_cases(split="dev"):
     if split != "dev":
         raise ValueError(f"Unknown dataset: {split}")
-    lines = (ROOT / "evals/dev.jsonl").read_text().splitlines()
+    lines = (ROOT / "evals/dev.jsonl").read_text(encoding="utf-8").splitlines()
     return [json.loads(line) for line in lines if line]
 
 
@@ -148,7 +148,7 @@ def run_evals(split="dev", mode="fixture", trace_dir=None):
                     {"type": "tool_result", "name": "request_return", "result": output}
                 )
             if trace:
-                with open(trace, "a") as handle:
+                with open(trace, "a", encoding="utf-8") as handle:
                     handle.write(
                         json.dumps(
                             {"type": "eval_host_followup", "events": result["events"][-3:]},

@@ -15,6 +15,7 @@ import tomllib
 from pathlib import Path
 
 from carrito.store import ROOT
+from carrito.texto import normalize
 from carrito.tools import words
 
 SOURCES = {"politicas": ROOT / "data" / "policies", "ayuda": ROOT / "data" / "ayuda"}
@@ -167,7 +168,7 @@ def embed(texts, client=None):
     if offline_check() and client is None:
         return [_fake_vector(t) for t in texts]
     cache_file = CACHE / f"{model}.json"
-    cache = json.loads(cache_file.read_text()) if cache_file.exists() else {}
+    cache = json.loads(cache_file.read_text(encoding="utf-8")) if cache_file.exists() else {}
     keys = [hashlib.sha256(t.encode()).hexdigest()[:16] for t in texts]
     missing = [t for t, k in zip(texts, keys) if k not in cache]
     if missing:
@@ -178,7 +179,7 @@ def embed(texts, client=None):
             for text, item in zip(batch, response.data):
                 cache[hashlib.sha256(text.encode()).hexdigest()[:16]] = item.embedding
         CACHE.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(json.dumps(cache))
+        cache_file.write_text(json.dumps(cache), encoding="utf-8")
     return [cache[k] for k in keys]
 
 
@@ -230,14 +231,18 @@ def search(query, config, chunks=None, client=None):
 # Measuring retrieval (S3 · Paso 2)
 # ---------------------------------------------------------------------------
 def load_cases(path=CASES):
-    return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+    return [
+        json.loads(line)
+        for line in Path(path).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def _hit(result, case):
     """A piece answers the question if it comes from an expected source and contains the key
     fact. Example: R2 needs the sentence «no enviamos baterías…», not only the Canarias price."""
-    return (
-        result["source_id"] in case["fuentes"] and case["clave"].lower() in result["text"].lower()
+    return result["source_id"] in case["fuentes"] and normalize(case["clave"]) in normalize(
+        result["text"]
     )
 
 
