@@ -27,7 +27,7 @@ def create_store(path: str = ":memory:") -> sqlite3.Connection:
             user_id TEXT, reason TEXT, requested_at TEXT);
     """)
     for table in ("products", "orders"):
-        rows = json.loads((ROOT / "data" / f"{table}.json").read_text())
+        rows = json.loads((ROOT / "data" / f"{table}.json").read_text(encoding="utf-8"))
         for row in rows:
             columns = ",".join(row)
             placeholders = ",".join("?" for _ in row)

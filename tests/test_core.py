@@ -96,7 +96,7 @@ def test_loop_stops_and_trace_exposes_calls(shop, tmp_path):
     result = run_agent("Auriculares por menos de 80", shop, model, trace_path=path)
     assert result["status"] == "completed"
     assert any(e["type"] == "tool_result" for e in result["events"])
-    assert all(json.loads(line) for line in path.read_text().splitlines())
+    assert all(json.loads(line) for line in path.read_text(encoding="utf-8").splitlines())
     endless = FixtureModel(
         [
             [

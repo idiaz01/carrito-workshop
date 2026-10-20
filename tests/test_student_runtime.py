@@ -20,12 +20,15 @@ def test_agent_runs_with_unfinished_steps_and_uses_defaults():
 
 
 def test_student_functions_are_used_and_errors_fall_back(tmp_path, monkeypatch):
-    (tmp_path / "system.md").write_text("## Rol\nEres Carrito.")
-    (tmp_path / "tools.md").write_text("## search_products\nBusca en el catálogo de la tienda.")
+    (tmp_path / "system.md").write_text("## Rol\nEres Carrito.", encoding="utf-8")
+    (tmp_path / "tools.md").write_text(
+        "## search_products\nBusca en el catálogo de la tienda.", encoding="utf-8"
+    )
     (tmp_path / "contexto.py").write_text(
         "def format_tool_result(name, result):\n    return 'resumen'\n"
         "def update_state(state, message):\n    return {**state, 'visto': True}\n"
-        "def build_history(turns, state, max_turns=2):\n    raise ValueError('ups')\n"
+        "def build_history(turns, state, max_turns=2):\n    raise ValueError('ups')\n",
+        encoding="utf-8",
     )
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     warnings = []
@@ -79,9 +82,9 @@ def test_compare_last_two_scoreboards(tmp_path):
         ]
         return {"passed": 1 + passed_c1, "total": 2, "tokens": tokens, "cases": rows}
 
-    (tmp_path / "20261015-100000.json").write_text(json.dumps(board(False, 9000)))
-    (tmp_path / "20261015-110000.json").write_text(json.dumps(board(True, 4000)))
-    (tmp_path / "ultimo.json").write_text("{}")
+    (tmp_path / "20261015-100000.json").write_text(json.dumps(board(False, 9000)), encoding="utf-8")
+    (tmp_path / "20261015-110000.json").write_text(json.dumps(board(True, 4000)), encoding="utf-8")
+    (tmp_path / "ultimo.json").write_text("{}", encoding="utf-8")
     pair = last_two_reports(tmp_path)
     assert [name for name, _ in pair] == ["20261015-100000.json", "20261015-110000.json"]
     text = render_comparison(*pair)
