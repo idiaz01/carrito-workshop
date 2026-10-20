@@ -17,8 +17,9 @@ excepto = ["recomendáis", "recomiendas", "recomiéndame", "busco", "comprar"]
 [[rutas]]
 tipo = "buscar"
 palabras = ["envío", "envíos", "enviar", "garantía", "pago", "pagar", "cupón", "factura", "regalo"]
-# Reto (C29, C30, C32): si habla de SUS pedidos, necesita get_order o mis_pedidos
-excepto = ["mi", "mis", "pedido", "pedidos"]
+# Reto: si habla de SUS pedidos (C29, C30), necesita get_order;
+# si pide un total (C32), necesita el precio del producto: search_products
+excepto = ["mi", "mis", "pedido", "pedidos", "total"]
 
 [subagente]
 activo = false       # aísla el contexto, pero gasta más tokens en total: mídelo
