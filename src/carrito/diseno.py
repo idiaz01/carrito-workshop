@@ -42,6 +42,9 @@ def load(path):
         palabras = route.get("palabras")
         if not isinstance(palabras, list) or not palabras:
             raise ConfigError(f'rutas #{k}: palabras tiene que ser una lista, como ["poema"]')
+        excepto = route.get("excepto", [])
+        if not isinstance(excepto, list):
+            raise ConfigError(f'rutas #{k}: excepto tiene que ser una lista, como ["pedido"]')
         if route["tipo"] == "fija" and not str(route.get("respuesta", "")).strip():
             raise ConfigError(f'rutas #{k}: una ruta fija necesita respuesta = "..."')
     subagent = raw.get("subagente", {})
@@ -55,9 +58,14 @@ def load(path):
 
 
 def choose_route(text, routes):
-    """The first route that shares a word with the message. None means: the agent decides."""
+    """The first route that shares a word with the message and none of its `excepto` words.
+
+    None means: the agent decides.
+    """
     tokens = words(text)
     for route in routes:
+        if tokens & words(" ".join(route.get("excepto", []))):
+            continue  # an excluded word: this route is not for this message
         if tokens & words(" ".join(route["palabras"])):
             return route
     return None

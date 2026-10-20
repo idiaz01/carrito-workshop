@@ -192,3 +192,11 @@ def test_budget_and_structured_output_checks():
     assert check_case(salida, "x", [], {"salida": None}) == ["sin salida estructurada (salida.py)"]
     ok = {"problemas": ["Citas P002"], "corregida": True}
     assert check_case(salida, "x", [], {"salida": ok}) == []
+
+
+def test_route_excepto_skips_the_route():
+    from carrito import diseno
+
+    routes = [{"tipo": "buscar", "palabras": ["envío"], "excepto": ["pedido"]}]
+    assert diseno.choose_route("¿Cuánto cuesta el envío a Baleares?", routes) is routes[0]
+    assert diseno.choose_route("¿Dónde está el envío de mi pedido 103?", routes) is None
