@@ -11,9 +11,9 @@
     "Cuidado: «¿Cuál es el estado del envío de mi pedido 103?» contiene «envío», pero necesita get_order. Elige bien las palabras."
   ],
   "3": [
-    "Borra la línea raise NotImplementedError. Después rellena los ___ uno a uno.",
-    "Regla 1: la fuente tiene que estar en vistos. Regla 2: el máximo son 600 caracteres.",
-    "Regla 3: el campo se llama pide_confirmacion (míralo en la clase Respuesta)."
+    "Borra raise NotImplementedError. Empieza con problemas = [] y termina con return problemas. Entre medias, una comprobación por regla.",
+    "Regla 1: for fuente in respuesta.fuentes: y dentro, if fuente not in vistos: problemas.append(\"Citas ..., pero no sale de ninguna tool. No la cites.\")",
+    "Regla 2: if len(respuesta.texto) > 600: … Regla 3: if respuesta.pide_confirmacion and \"confirm\" not in respuesta.texto.lower(): …"
   ],
   "4": [
     "Escribe en subagente.md: qué hace, qué devuelve (un resumen corto con IDs) y qué hacer si no encuentra nada.",
