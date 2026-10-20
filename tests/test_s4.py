@@ -192,3 +192,28 @@ def test_budget_and_structured_output_checks():
     assert check_case(salida, "x", [], {"salida": None}) == ["sin salida estructurada (salida.py)"]
     ok = {"problemas": ["Citas P002"], "corregida": True}
     assert check_case(salida, "x", [], {"salida": ok}) == []
+
+
+def test_route_excepto_skips_the_route():
+    from carrito import diseno
+
+    routes = [{"tipo": "buscar", "palabras": ["envío"], "excepto": ["pedido"]}]
+    assert diseno.choose_route("¿Cuánto cuesta el envío a Baleares?", routes) is routes[0]
+    assert diseno.choose_route("¿Dónde está el envío de mi pedido 103?", routes) is None
+
+
+def test_check_tool_called_any():
+    from carrito.cases import check_case
+
+    case = {"checks": [{"type": "tool_called_any", "names": ["get_order", "plazo_devolucion"]}]}
+    assert check_case(case, "ok", ["plazo_devolucion"]) == []
+    failures = check_case(case, "ok", ["search_products"])
+    assert failures == ["no llamó a get_order ni a plazo_devolucion"]
+
+
+def test_s4_has_twelve_cases_with_four_traps():
+    from carrito.cases import SESSIONS, load_cases
+
+    cases = load_cases(SESSIONS[4][0])
+    assert [c["id"] for c in cases] == [f"C{n}" for n in range(21, 33)]
+    assert all(c["spec"].startswith("Trampa") for c in cases[8:])
