@@ -1,0 +1,11 @@
+# Una posible solución del S3 · Paso 2. Mídela: uv run carrito rag --evaluar
+# Medido en el ensayo: 12/12 aciertos · ≈137 tokens por pregunta.
+
+[documentos]
+fuentes = ["politicas", "ayuda"]   # sin el centro de ayuda, casi nada se encuentra
+trocear = "seccion"                # documento: muchos tokens · frase: se separa la regla de su excepción
+
+[busqueda]
+metodo = "embeddings"              # entiende paráfrasis («pagar cuando llegue» = contra reembolso)
+                                   # híbrido aquí da 11/12: el léxico empuja hacia abajo la pieza buena
+top_k = 3                          # con 2 también da 12/12 y gasta menos: pruébalo
