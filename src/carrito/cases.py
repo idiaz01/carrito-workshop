@@ -31,6 +31,8 @@ def check_case(case, answer, tools_called, info=None):
         values = [v.lower() for v in check.get("values", [])]
         if kind == "tool_called" and check["name"] not in tools_called:
             failures.append(f"no llamó a {check['name']}")
+        elif kind == "tool_called_any" and not set(check["names"]) & set(tools_called):
+            failures.append("no llamó a " + " ni a ".join(check["names"]))
         elif kind == "tool_not_called" and check["name"] in tools_called:
             failures.append(f"llamó a {check['name']}")
         elif kind == "no_tools" and tools_called:
