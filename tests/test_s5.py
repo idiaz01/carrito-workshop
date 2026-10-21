@@ -109,3 +109,93 @@ def test_judge_evaluator_receives_the_tool_data(monkeypatch):
     result = experimentos.judge_evaluator({"turns": ["¿Auriculares?"]}, outputs, {})
     assert result["score"] == 1
     assert seen["evidence"] == "search_products: [P001 69,90]"
+
+
+def test_s5_cases_are_in_the_dataset():
+    ids = [c["id"] for c in experimentos.dataset_cases()]
+    assert ["C33", "C34", "C35", "C36"] == [i for i in ids if i in {"C33", "C34", "C35", "C36"}]
+
+
+def test_calibration_set_has_good_and_bad_answers():
+    rows = [
+        json.loads(line)
+        for line in experimentos.CALIBRATION.read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(rows) == 20
+    assert {r["humano"] for r in rows} == {"bien", "mal"}
+
+
+class FakeExample:
+    def __init__(self, case_id, inputs, outputs):
+        self.id, self.metadata, self.inputs, self.outputs = (
+            case_id,
+            {"id": case_id},
+            inputs,
+            outputs,
+        )
+
+
+class FakeClient:
+    def __init__(self, examples):
+        self.examples = examples
+        self.created, self.updated, self.deleted = [], [], []
+
+    def has_dataset(self, dataset_name):
+        return True
+
+    def read_dataset(self, dataset_name):
+        return type("D", (), {"id": "d1"})()
+
+    def list_examples(self, dataset_id):
+        return self.examples
+
+    def create_examples(self, dataset_id, examples):
+        self.created += examples
+
+    def update_example(self, example_id, inputs, outputs):
+        self.updated.append(example_id)
+
+    def delete_example(self, example_id):
+        self.deleted.append(example_id)
+
+
+def test_upload_adds_updates_and_deletes(monkeypatch):
+    import langsmith
+
+    same = FakeExample("A1", {"turns": ["hola"]}, {"checks": [], "spec": "x"})
+    changed = FakeExample("A2", {"turns": ["antes"]}, {"checks": [], "spec": "x"})
+    gone = FakeExample("A9", {"turns": ["borrado"]}, {"checks": [], "spec": "x"})
+    client = FakeClient([same, changed, gone])
+    monkeypatch.setattr(langsmith, "Client", lambda: client)
+    cases = [
+        {"id": "A1", "spec": "x", "turns": ["hola"], "checks": []},
+        {"id": "A2", "spec": "x", "turns": ["después"], "checks": []},
+        {"id": "A3", "turns": ["nuevo"], "checks": []},
+    ]
+    report = experimentos.upload_cases("d", cases)
+    assert report == {"dataset": "d", "nuevos": 1, "cambiados": 1, "borrados": 1, "total": 3}
+    assert client.updated == ["A2"] and client.deleted == ["A9"]
+
+
+def test_experiment_summary_shows_the_failing_cases():
+    def result(key, score):
+        return type("R", (), {"key": key, "score": score})()
+
+    items = [
+        {
+            "example": FakeExample("C2", {}, {}),
+            "evaluation_results": {"results": [result("checks", 1), result("tokens", 900)]},
+        },
+        {
+            "example": FakeExample("C10", {}, {}),
+            "evaluation_results": {"results": [result("checks", 0), result("tokens", 1100)]},
+        },
+        {
+            "example": FakeExample("C10", {}, {}),
+            "evaluation_results": {"results": [result("checks", 1), result("tokens", 1000)]},
+        },
+    ]
+    text = experimentos.render_summary(experimentos.summarize(items))
+    assert "C10   checks 1/2" in text
+    assert "C2 " not in text
+    assert "TOTAL: checks 2/3 · tokens 1000 de media" in text

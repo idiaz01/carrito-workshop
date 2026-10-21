@@ -17,13 +17,14 @@ Hoy tu agente gana una capacidad tuya (una skill) y lo evalúas como se hace en 
 | 2 | Ninguno | Tu dataset y tu primer experimento en LangSmith | `uv run carrito evals experimento --nombre base` |
 | 3 | `mi_agente/evaluadores.py` | Dos evaluadores de código | `uv run pytest tests/test_mi_agente.py --runxfail -q -k s5` |
 | 4 | `mi_agente/juez.md` | La rúbrica de un juez LLM, comparada con personas | `uv run carrito evals juez` |
-| Reto | Cualquiera | Una mejora demostrada: experimento antes y después | LangSmith · Compare |
+| Reto | `mi_agente/desde_cero.py` | Tu agente desde cero, con LangChain, en tu dominio | `uv run carrito reto` |
 
 ```bash
 uv run carrito evals subir                         # sube tu dataset a LangSmith
 uv run carrito evals experimento --nombre base     # un experimento con todos los casos
 uv run carrito evals experimento --nombre v2 --repeticiones 3 --juez
 uv run carrito evals local --caso M2               # lo mismo, en la terminal y sin LangSmith
+uv run carrito reto                                # el reto: tu agente desde cero
 uv run carrito pista s5-1
 ```
 

@@ -14,6 +14,7 @@ SESSIONS = {
     2: [CASES],
     3: [ROOT / "evals" / "s3_casos.jsonl"],
     4: [ROOT / "evals" / "s4_casos.jsonl"],
+    5: [ROOT / "evals" / "s5_casos.jsonl"],
 }
 RESULTS = ROOT / "runtime" / "casos"
 

@@ -337,13 +337,34 @@ def evals_command(accion, nombre, repeticiones, juez, caso):
     if accion == "subir":
         show(ex.upload())
     elif accion == "experimento":
-        ex.experiment(nombre, repeticiones, juez)
+        results = ex.experiment(nombre, repeticiones, juez)
+        print(ex.render_summary(ex.summarize(results)))
         where = ex.dataset_name()
         print(f"Experimento «{nombre}» terminado. En LangSmith: Datasets → {where}.")
     elif accion == "local":
         print(ex.render_local(ex.local(only=caso, with_judge=juez)))
     elif accion == "juez":
         print(ex.render_calibration(ex.calibrate()))
+
+
+def reto_command(args):
+    """S5 · Reto: your agent from scratch, with LangChain."""
+    from carrito import experimentos as ex
+    from carrito import reto
+    from carrito.trazas import enabled
+
+    module = reto.load()
+    if args.chat:
+        reto.chat(module)
+    elif args.langsmith:
+        if not enabled():
+            print("Necesitas LangSmith activo en .env. Sin LangSmith: uv run carrito reto")
+            raise SystemExit(1)
+        results = reto.experiment(module, args.nombre, args.repeticiones, not args.sin_juez)
+        print(ex.render_summary(ex.summarize(results)))
+        print(f"Experimento «{args.nombre}» terminado. En LangSmith: Datasets → reto-…")
+    else:
+        print(reto.render(reto.local(module, args.caso, not args.sin_juez)))
 
 
 def main():
@@ -388,6 +409,13 @@ def main():
         "--juez", action="store_true", help="añade el juez LLM (mi_agente/juez.md)"
     )
     evals_parser.add_argument("--caso", action="append", help="local: solo este caso")
+    reto_parser = sub.add_parser("reto", help="S5: tu agente desde cero (mi_agente/desde_cero.py)")
+    reto_parser.add_argument("--chat", action="store_true", help="habla con tu agente")
+    reto_parser.add_argument("--langsmith", action="store_true", help="experimento en LangSmith")
+    reto_parser.add_argument("--nombre", default="reto", help="nombre del experimento")
+    reto_parser.add_argument("--repeticiones", type=int, default=1)
+    reto_parser.add_argument("--sin-juez", action="store_true", help="sin el juez LLM")
+    reto_parser.add_argument("--caso", action="append", help="solo este caso (R1, R2…)")
     hint = sub.add_parser("pista", help="la siguiente pista de un lab: carrito pista s3-2")
     hint.add_argument("codigo")
     cases = sub.add_parser("casos", help="S2: marcador de casos de tu agente")
@@ -454,6 +482,8 @@ def main():
         pista(args.codigo)
     elif args.command == "evals":
         evals_command(args.accion, args.nombre, args.repeticiones, args.juez, args.caso)
+    elif args.command == "reto":
+        reto_command(args)
     elif args.command == "casos":
         casos(args.debug, args.caso, args.comparar, args.reto, args.sesion, args.todos)
     elif args.command == "eval":
