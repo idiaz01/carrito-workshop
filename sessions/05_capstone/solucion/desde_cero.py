@@ -110,7 +110,10 @@ CASOS = [
         "turns": ["¿Tenéis mesa el sábado para cenar?"],
         "checks": [
             {"type": "tool_called", "name": "ver_mesas"},
-            {"type": "contains_any", "values": ["no quedan", "no hay mesa", "no tenemos mesa", "sin mesas", "completo"]},
+            {
+                "type": "contains_any",
+                "values": ["no quedan", "no hay mesa", "no tenemos mesa", "sin mesas", "completo"],
+            },
         ],
     },
 ]

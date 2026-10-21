@@ -45,4 +45,4 @@ select = ["E", "F", "I"]
 # Lab skeletons: ___ marks the gaps the student fills in.
 "mi_agente/herramientas.py" = ["F821"]
 "mi_agente/salida.py" = ["F821"]
-"mi_agente/evaluadores.py" = ["F821"]
+"mi_agente/evaluadores.py" = ["F401"]  # re: the student uses it in the functions
