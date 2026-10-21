@@ -27,7 +27,7 @@ DEFAULT_RUBRIC = "Di si la respuesta es buena."
 # Dataset
 # ---------------------------------------------------------------------------
 def dataset_cases():
-    cases = [c for s in (2, 3, 4) for path in SESSIONS[s] for c in load_cases(path)]
+    cases = [c for s in (2, 3, 4, 5) for path in SESSIONS[s] for c in load_cases(path)]
     own = FOLDER / "casos.jsonl"
     if own.exists():
         cases += load_cases(own)
@@ -40,31 +40,50 @@ def dataset_name():
 
 
 def upload():
-    """Create (or update) the dataset in LangSmith. Existing case IDs are not duplicated."""
+    """Create (or update) the dataset in LangSmith.
+
+    New cases are added. A case you changed (for example, M2 in casos.jsonl) is updated.
+    A case you deleted is deleted. So the dataset is always the same as your files.
+    """
+    return upload_cases(dataset_name(), dataset_cases(), "Casos de Carrito (S2-S5)")
+
+
+def upload_cases(name, cases, description=""):
+    """The dataset `name` in LangSmith, the same as `cases`: add, update and delete."""
     from langsmith import Client
 
     client = Client()
-    name = dataset_name()
     if client.has_dataset(dataset_name=name):
         dataset = client.read_dataset(dataset_name=name)
-        known = {(e.metadata or {}).get("id") for e in client.list_examples(dataset_id=dataset.id)}
+        known = {
+            (e.metadata or {}).get("id"): e for e in client.list_examples(dataset_id=dataset.id)
+        }
     else:
-        dataset = client.create_dataset(name, description="Casos de Carrito (S2-S5)")
-        known = set()
-    new = [c for c in dataset_cases() if c["id"] not in known]
+        dataset = client.create_dataset(name, description=description)
+        known = {}
+    new, changed = [], 0
+    for case in cases:
+        inputs = {"turns": case["turns"]}
+        outputs = {"checks": case["checks"], "spec": case.get("spec", "")}
+        example = known.get(case["id"])
+        if example is None:
+            new.append({"inputs": inputs, "outputs": outputs, "metadata": {"id": case["id"]}})
+        elif example.inputs != inputs or example.outputs != outputs:
+            client.update_example(example.id, inputs=inputs, outputs=outputs)
+            changed += 1
     if new:
-        client.create_examples(
-            dataset_id=dataset.id,
-            examples=[
-                {
-                    "inputs": {"turns": c["turns"]},
-                    "outputs": {"checks": c["checks"], "spec": c["spec"]},
-                    "metadata": {"id": c["id"]},
-                }
-                for c in new
-            ],
-        )
-    return {"dataset": name, "nuevos": len(new), "total": len(known) + len(new)}
+        client.create_examples(dataset_id=dataset.id, examples=new)
+    ids = {c["id"] for c in cases}
+    gone = [e.id for case_id, e in known.items() if case_id not in ids]
+    for example_id in gone:
+        client.delete_example(example_id)
+    return {
+        "dataset": name,
+        "nuevos": len(new),
+        "cambiados": changed,
+        "borrados": len(gone),
+        "total": len(cases),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -139,9 +158,11 @@ class Veredicto(BaseModel):
     motivo: str
 
 
-def judge(question, answer, evidence="", model=None):
-    """LLM-as-judge with your rubric (mi_agente/juez.md). Structured output: bien / mal."""
-    rubric = _read("juez.md") or DEFAULT_RUBRIC
+def judge(question, answer, evidence="", model=None, rubric=None):
+    """LLM-as-judge with your rubric (mi_agente/juez.md). Structured output: bien / mal.
+
+    rubric: another rubric, for example the JUEZ of mi_agente/desde_cero.py (reto)."""
+    rubric = rubric or _read("juez.md") or DEFAULT_RUBRIC
     model = model or OpenAIModel()
     messages = [
         {"role": "system", "content": rubric},
@@ -164,21 +185,29 @@ def judge_evaluator(inputs, outputs, reference_outputs):
 
 
 def calibrate(model=None, path=CALIBRATION):
-    """Compare the judge with human labels: a judge is a system that needs evaluating too."""
-    rows = []
-    for line in Path(path).read_text().splitlines():
-        if not line.strip():
-            continue
-        item = json.loads(line)
+    """Compare the judge with human labels: a judge is a system that needs evaluating too.
+
+    The judge reads the answers four at a time (about 15 seconds for 20 answers).
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    items = [json.loads(line) for line in lines if line.strip()]
+
+    def one(item):
         verdict = judge(item["pregunta"], item["respuesta"], item.get("datos", ""), model)
-        rows.append(
-            {
-                **item,
-                "juez": verdict.veredicto,
-                "motivo_juez": verdict.motivo,
-                "acuerdo": verdict.veredicto == item["humano"],
-            }
-        )
+        return {
+            **item,
+            "juez": verdict.veredicto,
+            "motivo_juez": verdict.motivo,
+            "acuerdo": verdict.veredicto == item["humano"],
+        }
+
+    if model is None:  # a real model: in parallel
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            rows = list(pool.map(one, items))
+    else:  # a fixture model answers in order
+        rows = [one(item) for item in items]
     agree = sum(r["acuerdo"] for r in rows)
     return {"acuerdo": agree, "total": len(rows), "filas": rows}
 
@@ -205,7 +234,7 @@ def evaluators(with_judge=False):
 def experiment(name, repetitions=1, with_judge=False):
     from langsmith import evaluate
 
-    upload()
+    print(upload())
     return evaluate(
         run_case,
         data=dataset_name(),
@@ -215,6 +244,44 @@ def experiment(name, repetitions=1, with_judge=False):
         max_concurrency=4,
         metadata={"carpeta": str(FOLDER)},
     )
+
+
+def summarize(results):
+    """{case id: {evaluator: [scores]}} from the results of langsmith.evaluate."""
+    table = {}
+    for item in results:
+        example = item["example"]
+        case_id = (getattr(example, "metadata", None) or {}).get("id", "?")
+        row = table.setdefault(case_id, {})
+        for result in item["evaluation_results"]["results"]:
+            if result.score is not None:
+                row.setdefault(result.key, []).append(result.score)
+    return table
+
+
+def render_summary(table):
+    """The experiment in the terminal: the cases that fail, and the total of each evaluator."""
+    keys = sorted({k for row in table.values() for k in row if k != "tokens"})
+    lines = []
+    for case_id, row in sorted(table.items(), key=lambda kv: _order(kv[0])):
+        bad = {k: v for k, v in row.items() if k != "tokens" and sum(v) < len(v)}
+        if bad:
+            cells = "  ".join(f"{k} {sum(v):g}/{len(v)}" for k, v in sorted(bad.items()))
+            lines.append(f"  {case_id:<5} {cells}")
+    head = ["Casos con algún fallo:"] if lines else ["Ningún caso falla."]
+    totals = []
+    for key in keys:
+        values = [x for row in table.values() for x in row.get(key, [])]
+        totals.append(f"{key} {sum(values):g}/{len(values)}")
+    tokens = [x for row in table.values() for x in row.get("tokens", [])]
+    if tokens:
+        totals.append(f"tokens {round(sum(tokens) / len(tokens))} de media")
+    return "\n".join(head + lines + ["TOTAL: " + " · ".join(totals)])
+
+
+def _order(case_id):
+    letter, number = case_id[:1], case_id[1:]
+    return (letter, int(number) if number.isdigit() else 0)
 
 
 def local(model_factory=None, only=None, with_judge=False):

@@ -13,27 +13,35 @@ El modelo solo ve el nombre y la descripción de cada skill. Las instrucciones s
 
 ## Lab 2 · Dataset y experimento
 
-1. `uv run carrito evals subir`: sube los casos de S2–S4 y los tuyos.
-2. `uv run carrito evals experimento --nombre base`.
-3. En LangSmith, abre «Datasets & Experiments», tu dataset y el experimento. Mira `checks` y `tokens` por caso.
+1. `uv run carrito evals subir`: sube los casos de S2–S5 y los tuyos. Si cambias un caso, `subir` lo actualiza.
+2. `uv run carrito evals experimento --nombre base`. Al terminar, la terminal enseña los casos que fallan.
+3. En LangSmith, abre «Datasets & Experiments», tu dataset y el experimento. Abre un caso que falla (C33–C36) y su traza.
 
 ## Lab 3 · Evaluadores de código
 
-En `mi_agente/evaluadores.py`, borra `raise NotImplementedError` en las dos funciones y rellena los `___`.
+En `mi_agente/evaluadores.py`, escribe las dos funciones enteras: `cita_fuentes` (RESP-1) y `breve` (RESP-3). El docstring de cada una tiene las reglas y dos ejemplos.
 Comprueba: `uv run pytest tests/test_mi_agente.py --runxfail -q -k s5`.
 
 ## Lab 4 · Un juez LLM
 
-1. `uv run carrito evals juez`: el juez valora 8 respuestas que una persona ya ha etiquetado.
+1. `uv run carrito evals juez`: el juez valora 20 respuestas que una persona ya ha etiquetado.
 2. Mejora `mi_agente/juez.md` hasta que el acuerdo sea alto. Usa los requisitos de `SPEC.md`.
 3. Un juez también es un sistema que hay que evaluar.
 
-## Reto · Una mejora demostrada
+## Reto · Tu agente desde cero
 
-1. Elige un fallo de tu experimento `base`.
-2. Cambia UNA pieza de tu agente.
-3. `uv run carrito evals experimento --nombre mejora --repeticiones 3`.
-4. En LangSmith, compara `base` y `mejora`. ¿Mejora lo que querías? ¿Empeora algo?
+`mi_agente/desde_cero.py`: un agente completo con LangChain en un archivo. Funciona tal cual: el asistente de un gimnasio. Tiene las seis piezas del curso: datos, tools, prompt, límites, casos y juez.
+
+1. **Nivel 1:** cámbialo por tu dominio: datos, prompt, casos y juez.
+2. **Nivel 2:** añade una tool nueva.
+3. **Nivel 3:** un experimento en LangSmith con repeticiones.
+
+```bash
+uv run carrito reto --chat                         # habla con tu agente
+uv run carrito reto                                # tus casos, tus evaluadores y tu juez
+uv run carrito reto --langsmith --repeticiones 3   # el experimento
+uv run carrito pista s5-reto
+```
 
 ## Debes poder explicar
 
@@ -42,3 +50,4 @@ Comprueba: `uv run pytest tests/test_mi_agente.py --runxfail -q -k s5`.
 - Cuándo usar un evaluador de código, un juez LLM o una persona.
 - Por qué se repite un experimento.
 - Qué vigilarías de tu agente en producción.
+- Qué piezas tiene un agente que construyes desde cero, y dónde estaba cada una en Carrito.

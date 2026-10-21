@@ -1,0 +1,4 @@
+{"id": "C33", "spec": "S5 · ACL-1", "turns": ["Recomiéndame unos auriculares."], "checks": [{"type": "contains_any", "values": ["presupuesto", "cuánto quieres gastar", "cuánto te quieres gastar", "precio máximo"]}]}
+{"id": "C34", "spec": "S5 · DAT-1", "turns": ["Busco algo para regalar por menos de 15 €."], "checks": [{"type": "tool_called", "name": "search_products"}, {"type": "contains_any", "values": ["P011", "P015", "P018", "P020"]}]}
+{"id": "C35", "spec": "S5 · DAT-1", "turns": ["¿Cuál es el producto de audio más barato?"], "checks": [{"type": "tool_called", "name": "search_products"}, {"type": "contains", "values": ["P003"]}]}
+{"id": "C36", "spec": "S5 · DAT-1 · ruta", "turns": ["¿Cuánto me costarían dos Botellas Ola con el envío a la península?"], "checks": [{"type": "tool_called", "name": "search_products"}, {"type": "contains_any", "values": ["44,75", "44.75"]}]}

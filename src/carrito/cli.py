@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 from pathlib import Path
 
 from carrito.agent import run_agent
@@ -90,7 +91,7 @@ def chat(mode, trace_dir):
                     }
                 )
             trace_dir.mkdir(parents=True, exist_ok=True)
-            with (trace_dir / "host.jsonl").open("a") as handle:
+            with (trace_dir / "host.jsonl").open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps({"type": "host_confirmation", "result": result}) + "\n")
             continue
         scenario = (
@@ -299,19 +300,27 @@ def pista(codigo):
     if not path.exists() or not lab:
         print("Usa: uv run carrito pista s3-2   (sesión 3, lab 2)")
         return
-    hints = json.loads(path.read_text()).get(lab)
+    hints = json.loads(path.read_text(encoding="utf-8")).get(lab)
     if not hints:
         print(f"No hay pistas para el lab {lab} de {sesion}.")
         return
     state_file = ROOT / "runtime" / "pistas.json"
-    state = json.loads(state_file.read_text()) if state_file.exists() else {}
+    state = json.loads(state_file.read_text(encoding="utf-8")) if state_file.exists() else {}
     seen = state.get(codigo, 0)
     shown = min(seen + 1, len(hints))
     for k, hint in enumerate(hints[:shown], 1):
         print(f"Pista {k}/{len(hints)}: {hint}")
     state[codigo] = shown
     state_file.parent.mkdir(parents=True, exist_ok=True)
-    state_file.write_text(json.dumps(state))
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+
+
+def use_utf8():
+    """Windows: the terminal may use cp1252. Then ✅, █ and accents break, and what the
+    student types («envío») does not match a route. UTF-8 gives the same text everywhere."""
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
 
 
 def evals_command(accion, nombre, repeticiones, juez, caso):
@@ -328,7 +337,8 @@ def evals_command(accion, nombre, repeticiones, juez, caso):
     if accion == "subir":
         show(ex.upload())
     elif accion == "experimento":
-        ex.experiment(nombre, repeticiones, juez)
+        results = ex.experiment(nombre, repeticiones, juez)
+        print(ex.render_summary(ex.summarize(results)))
         where = ex.dataset_name()
         print(f"Experimento «{nombre}» terminado. En LangSmith: Datasets → {where}.")
     elif accion == "local":
@@ -337,7 +347,28 @@ def evals_command(accion, nombre, repeticiones, juez, caso):
         print(ex.render_calibration(ex.calibrate()))
 
 
+def reto_command(args):
+    """S5 · Reto: your agent from scratch, with LangChain."""
+    from carrito import experimentos as ex
+    from carrito import reto
+    from carrito.trazas import enabled
+
+    module = reto.load()
+    if args.chat:
+        reto.chat(module)
+    elif args.langsmith:
+        if not enabled():
+            print("Necesitas LangSmith activo en .env. Sin LangSmith: uv run carrito reto")
+            raise SystemExit(1)
+        results = reto.experiment(module, args.nombre, args.repeticiones, not args.sin_juez)
+        print(ex.render_summary(ex.summarize(results)))
+        print(f"Experimento «{args.nombre}» terminado. En LangSmith: Datasets → reto-…")
+    else:
+        print(reto.render(reto.local(module, args.caso, not args.sin_juez)))
+
+
 def main():
+    use_utf8()
     parser = argparse.ArgumentParser(description="Carrito · taller local")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor")
@@ -378,6 +409,13 @@ def main():
         "--juez", action="store_true", help="añade el juez LLM (mi_agente/juez.md)"
     )
     evals_parser.add_argument("--caso", action="append", help="local: solo este caso")
+    reto_parser = sub.add_parser("reto", help="S5: tu agente desde cero (mi_agente/desde_cero.py)")
+    reto_parser.add_argument("--chat", action="store_true", help="habla con tu agente")
+    reto_parser.add_argument("--langsmith", action="store_true", help="experimento en LangSmith")
+    reto_parser.add_argument("--nombre", default="reto", help="nombre del experimento")
+    reto_parser.add_argument("--repeticiones", type=int, default=1)
+    reto_parser.add_argument("--sin-juez", action="store_true", help="sin el juez LLM")
+    reto_parser.add_argument("--caso", action="append", help="solo este caso (R1, R2…)")
     hint = sub.add_parser("pista", help="la siguiente pista de un lab: carrito pista s3-2")
     hint.add_argument("codigo")
     cases = sub.add_parser("casos", help="S2: marcador de casos de tu agente")
@@ -420,7 +458,7 @@ def main():
             if tools.pending == ("104", "No encaja"):
                 confirmation = confirm_host(tools)
                 show({"host_confirmation": confirmation})
-                with args.trace.open("a") as handle:
+                with args.trace.open("a", encoding="utf-8") as handle:
                     handle.write(
                         json.dumps({"type": "host_confirmation", "result": confirmation}) + "\n"
                     )
@@ -444,6 +482,8 @@ def main():
         pista(args.codigo)
     elif args.command == "evals":
         evals_command(args.accion, args.nombre, args.repeticiones, args.juez, args.caso)
+    elif args.command == "reto":
+        reto_command(args)
     elif args.command == "casos":
         casos(args.debug, args.caso, args.comparar, args.reto, args.sesion, args.todos)
     elif args.command == "eval":
@@ -452,7 +492,7 @@ def main():
         if report["passed"] != report["total"]:
             raise SystemExit(1)
     elif args.command == "trace":
-        for index, line in enumerate(args.path.read_text().splitlines(), 1):
+        for index, line in enumerate(args.path.read_text(encoding="utf-8").splitlines(), 1):
             event = json.loads(line)
             print(f"\nEvent {index}: {event['type']}")
             show(event)

@@ -8,17 +8,42 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 TOP_FILES = {
-    "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "pyproject.toml", "uv.lock",
-    ".env.example", ".gitattributes", ".gitignore", ".python-version", "SPEC.md"}
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "pyproject.toml",
+    "uv.lock",
+    ".env.example",
+    ".gitattributes",
+    ".gitignore",
+    ".python-version",
+    "SPEC.md",
+}
 FOLDERS = {
-    "src", "tests", "data", "examples", "sessions", "evals", "docs", "scripts", ".github",
+    "src",
+    "tests",
+    "data",
+    "examples",
+    "sessions",
+    "evals",
+    "docs",
+    "scripts",
+    ".github",
     "mi_agente",
 }
 DOCS = {"setup.md", "architecture.md", "references.md"}
 SCRIPTS = {"check_notebooks.py", "check_student_repo.py"}
 EVALS = {
-    "README.md", "rubrics.md", "dev.jsonl", "s2_casos.jsonl", "s2_reto.jsonl",
-    "s3_casos.jsonl", "s3_rag.jsonl", "s4_casos.jsonl", "s5_juez.jsonl",
+    "README.md",
+    "rubrics.md",
+    "dev.jsonl",
+    "s2_casos.jsonl",
+    "s2_reto.jsonl",
+    "s3_casos.jsonl",
+    "s3_rag.jsonl",
+    "s4_casos.jsonl",
+    "s5_casos.jsonl",
+    "s5_juez.jsonl",
 }
 INTERNAL = re.compile(
     r"docs/(?:guiones|revision|research|output)|instructor-guide|evals/instructor|"
@@ -31,7 +56,10 @@ INTERNAL = re.compile(
 def main():
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
-        cwd=ROOT, check=True, capture_output=True, text=True,
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
     )
     names = sorted(set(filter(None, result.stdout.split("\0"))))
     assert names, "No workshop files found"
@@ -47,16 +75,16 @@ def main():
         assert path.suffix not in {".pptx", ".pdf", ".docx", ".zip", ".bundle"}, name
         file = ROOT / path
         if path.suffix == ".ipynb":
-            nb = json.loads(file.read_text())
+            nb = json.loads(file.read_text(encoding="utf-8"))
             for cell in nb["cells"]:
                 assert not INTERNAL.search("".join(cell["source"])), name
                 if cell["cell_type"] == "code":
                     assert cell["execution_count"] is None and not cell["outputs"], name
         elif path.suffix in {".md", ".py"} and path.name != "check_student_repo.py":
-            text = file.read_text()
+            text = file.read_text(encoding="utf-8")
             assert not INTERNAL.search(text), name
         if path.suffix == ".md":
-            for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", file.read_text()):
+            for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", file.read_text(encoding="utf-8")):
                 if "://" in target or target.startswith(("#", "mailto:")):
                     continue
                 relative = unquote(target.split("#")[0])

@@ -4,8 +4,8 @@ No es la única correcta. Es la que vimos en clase. Parte de la [solución de S3
 
 | Archivo | Lab | Qué cambia |
 |---|---|---|
-| [agente.toml](agente.toml) | 1, 2 y 4 | Límites (8 pasos, 10 tools), una ruta fija, una ruta de búsqueda y el subagente apagado |
-| [salida.py](salida.py) | 3 | `revisar()` con los tres huecos rellenos |
+| [agente.toml](agente.toml) | 1, 2, 4 y reto | Límites (8 pasos, 10 tools), una ruta fija, una ruta de búsqueda, `excepto` en las dos rutas (casos trampa C29–C32) y el subagente apagado |
+| [salida.py](salida.py) | 3 | `revisar()` entera: una comprobación por regla |
 | [subagente.md](subagente.md) | 4 | El prompt del subagente de documentos |
 | [tools.md](tools.md) | Reto | Nueva sección `mis_pedidos` |
 | [system.md](system.md) | Reto | Usar `mis_pedidos` y pedir los plazos a la vez |

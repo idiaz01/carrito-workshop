@@ -23,6 +23,9 @@ max_tokens = 16000   # tokens (entrada + salida) por turno
 # tipo = "fija"
 # palabras = ["poema"]
 # respuesta = "Solo puedo ayudarte con la tienda."
+#
+# RETO · excepto: si el mensaje tiene una de estas palabras, esta ruta NO se usa
+#   y se prueba la siguiente (o decide el agente). Ejemplo: excepto = ["comprar"]
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
