@@ -41,7 +41,7 @@ def ver_mesas(dia: str) -> dict:
 
 
 @tool
-def preparar_reserva(dia: str, personas: int) -> dict:  # Nivel 2: una tool nueva
+def preparar_reserva(dia: str, personas: int) -> dict:  # ahora pide día y personas
     """Prepara una reserva de cena. NO la confirma: el cliente la confirma con el
     enlace que recibe por SMS."""
     if MESAS.get(dia.strip().lower(), 0) == 0:
