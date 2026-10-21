@@ -85,7 +85,7 @@ def test_state_roundtrip_is_explicit_and_validated(tmp_path):
     path = tmp_path / "state.json"
     save_state(path, state)
     assert load_state(path) == state
-    path.write_text('{"budget_eur": -1}')
+    path.write_text('{"budget_eur": -1}', encoding="utf-8")
     with pytest.raises(ValueError):
         load_state(path)
 

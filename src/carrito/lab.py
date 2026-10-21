@@ -167,11 +167,11 @@ def compare_contracts(builder=None, profile=None, cases=None, mode="fixture"):
 
 
 def save_state(path, state):
-    Path(path).write_text(state.model_dump_json(indent=2))
+    Path(path).write_text(state.model_dump_json(indent=2), encoding="utf-8")
 
 
 def load_state(path):
-    return ConversationState.model_validate_json(Path(path).read_text())
+    return ConversationState.model_validate_json(Path(path).read_text(encoding="utf-8"))
 
 
 def recover_read(operation, attempts=2):

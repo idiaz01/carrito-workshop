@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from carrito.student import ROOT, StudentAgent
+from carrito.texto import normalize
 
 CASES = ROOT / "evals" / "s2_casos.jsonl"
 RETO = ROOT / "evals" / "s2_reto.jsonl"
@@ -18,31 +19,37 @@ RESULTS = ROOT / "runtime" / "casos"
 
 
 def load_cases(path=CASES):
-    return [json.loads(line) for line in Path(path).read_text().splitlines() if line.strip()]
+    return [
+        json.loads(line)
+        for line in Path(path).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def check_case(case, answer, tools_called, info=None):
     """info (S4): {"tokens": tokens of the case, "salida": the Salida line of --debug}."""
     info = info or {}
-    text = answer.lower()
+    text = normalize(answer)
     failures = []
     for check in case["checks"]:
         kind = check["type"]
-        values = [v.lower() for v in check.get("values", [])]
+        values = [normalize(v) for v in check.get("values", [])]
         if kind == "tool_called" and check["name"] not in tools_called:
             failures.append(f"no llamó a {check['name']}")
+        elif kind == "tool_called_any" and not set(check["names"]) & set(tools_called):
+            failures.append("no llamó a " + " ni a ".join(check["names"]))
         elif kind == "tool_not_called" and check["name"] in tools_called:
             failures.append(f"llamó a {check['name']}")
         elif kind == "no_tools" and tools_called:
             failures.append("usó tools: " + ", ".join(tools_called))
         elif kind == "contains":
-            missing = [v for v in check["values"] if v.lower() not in text]
+            missing = [v for v in check["values"] if normalize(v) not in text]
             if missing:
                 failures.append("falta " + ", ".join(missing))
         elif kind == "contains_any" and not any(v in text for v in values):
             failures.append("no dice: " + " / ".join(check["values"][:3]) + "…")
         elif kind == "not_contains":
-            found = [v for v in check["values"] if v.lower() in text]
+            found = [v for v in check["values"] if normalize(v) in text]
             if found:
                 failures.append("dice " + ", ".join(found))
         elif kind == "max_chars" and len(answer) > check["value"]:
@@ -121,7 +128,9 @@ def save_report(report):
     RESULTS.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     for name in (f"{stamp}.json", "ultimo.json"):
-        (RESULTS / name).write_text(json.dumps(report, ensure_ascii=False, indent=2))
+        (RESULTS / name).write_text(
+            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
     return RESULTS / f"{stamp}.json"
 
 
@@ -142,7 +151,7 @@ def last_two_reports(results=RESULTS):
     files = sorted(Path(results).glob("2*.json"))
     if len(files) < 2:
         return None
-    return [(f.name, json.loads(f.read_text())) for f in files[-2:]]
+    return [(f.name, json.loads(f.read_text(encoding="utf-8"))) for f in files[-2:]]
 
 
 def render_comparison(before, after):

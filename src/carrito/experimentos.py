@@ -166,7 +166,7 @@ def judge_evaluator(inputs, outputs, reference_outputs):
 def calibrate(model=None, path=CALIBRATION):
     """Compare the judge with human labels: a judge is a system that needs evaluating too."""
     rows = []
-    for line in Path(path).read_text().splitlines():
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         item = json.loads(line)

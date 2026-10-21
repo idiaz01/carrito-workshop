@@ -47,12 +47,17 @@ Compara tokens con `uv run carrito casos --sesion 4` y `--comparar`. Cuidado con
 
 ## Reto
 
-`uv run carrito casos --sesion 4`: 8 casos (C21–C28). Gana quien pase más casos con menos tokens.
+`uv run carrito casos --sesion 4`: 12 casos (C21–C32). Gana quien pase más casos con menos tokens.
 
 Algunos casos miran el diseño, no solo la respuesta:
 
 - C22, C23 y C27 tienen un máximo de tokens: sin una ruta, el agente gasta demasiado.
 - C24 pide salida estructurada: `revisar()` tiene que estar escrito (Lab 3).
+- C29–C32 son trampas: con las rutas del Lab 2, fallan. Una palabra no es una intención.
+
+Arregla las trampas sin perder C22, C23 ni C27. Una ruta puede tener `excepto`: una lista de palabras que la desactivan (mira `agente.toml`). Pistas: `uv run carrito pista s4-reto`.
+
+Al final, `uv run carrito casos --todos`: una ruta nueva no puede romper un caso de antes.
 
 ## Debes poder explicar
 

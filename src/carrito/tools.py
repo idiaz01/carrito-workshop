@@ -142,7 +142,7 @@ class StoreTools:
         tokens = words(query)
         documents = []
         for path in sorted((ROOT / "data" / "policies").glob("*.md")):
-            body = path.read_text()
+            body = path.read_text(encoding="utf-8")
             score = len(tokens & words(body))
             if score or not tokens:
                 documents.append({"source_id": path.stem, "text": body, "score": score})

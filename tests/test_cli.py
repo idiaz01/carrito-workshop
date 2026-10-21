@@ -9,6 +9,7 @@ def cli(*args, input=None):
         input=input,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         env={**os.environ, "PYTHONPATH": "src"},
     )
 

@@ -28,8 +28,8 @@ def call(name, args, cid="c1"):
 
 def test_skills_are_listed_and_loaded_on_demand(tmp_path, monkeypatch):
     (tmp_path / "skills").mkdir()
-    (tmp_path / "skills" / "regalos.md").write_text(SKILL)
-    (tmp_path / "skills" / "rota.md").write_text("sin cabecera")
+    (tmp_path / "skills" / "regalos.md").write_text(SKILL, encoding="utf-8")
+    (tmp_path / "skills" / "rota.md").write_text("sin cabecera", encoding="utf-8")
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     assert list(student.load_skills()) == ["regalos"]
     model = FixtureModel([[call("cargar_skill", {"nombre": "regalos"})], []], final_text="ok")
@@ -58,7 +58,7 @@ def test_checks_and_tokens_evaluators():
 def test_student_evaluators_are_found_when_written(tmp_path, monkeypatch):
     monkeypatch.setattr(student, "FOLDER", tmp_path)
     monkeypatch.setattr(experimentos, "load_student_module", student.load_student_module)
-    (tmp_path / "evaluadores.py").write_text(SOLVED)
+    (tmp_path / "evaluadores.py").write_text(SOLVED, encoding="utf-8")
     found = experimentos.student_evaluators()
     assert [f.__name__ for f in found] == ["siempre"]
     result = found[0]({}, {"respuesta": "x", "tools": []}, {})
@@ -80,7 +80,8 @@ def test_judge_calibration_counts_agreement(tmp_path):
         json.dumps({"id": "J1", "pregunta": "p", "respuesta": "r", "humano": "bien", "razon": "x"})
         + "\n"
         + json.dumps({"id": "J2", "pregunta": "p", "respuesta": "r", "humano": "mal", "razon": "y"})
-        + "\n"
+        + "\n",
+        encoding="utf-8",
     )
 
     class Lenient(FixtureModel):

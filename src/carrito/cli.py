@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 from pathlib import Path
 
 from carrito.agent import run_agent
@@ -90,7 +91,7 @@ def chat(mode, trace_dir):
                     }
                 )
             trace_dir.mkdir(parents=True, exist_ok=True)
-            with (trace_dir / "host.jsonl").open("a") as handle:
+            with (trace_dir / "host.jsonl").open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps({"type": "host_confirmation", "result": result}) + "\n")
             continue
         scenario = (
@@ -299,19 +300,27 @@ def pista(codigo):
     if not path.exists() or not lab:
         print("Usa: uv run carrito pista s3-2   (sesión 3, lab 2)")
         return
-    hints = json.loads(path.read_text()).get(lab)
+    hints = json.loads(path.read_text(encoding="utf-8")).get(lab)
     if not hints:
         print(f"No hay pistas para el lab {lab} de {sesion}.")
         return
     state_file = ROOT / "runtime" / "pistas.json"
-    state = json.loads(state_file.read_text()) if state_file.exists() else {}
+    state = json.loads(state_file.read_text(encoding="utf-8")) if state_file.exists() else {}
     seen = state.get(codigo, 0)
     shown = min(seen + 1, len(hints))
     for k, hint in enumerate(hints[:shown], 1):
         print(f"Pista {k}/{len(hints)}: {hint}")
     state[codigo] = shown
     state_file.parent.mkdir(parents=True, exist_ok=True)
-    state_file.write_text(json.dumps(state))
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+
+
+def use_utf8():
+    """Windows: the terminal may use cp1252. Then ✅, █ and accents break, and what the
+    student types («envío») does not match a route. UTF-8 gives the same text everywhere."""
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
 
 
 def evals_command(accion, nombre, repeticiones, juez, caso):
@@ -338,6 +347,7 @@ def evals_command(accion, nombre, repeticiones, juez, caso):
 
 
 def main():
+    use_utf8()
     parser = argparse.ArgumentParser(description="Carrito · taller local")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor")
@@ -420,7 +430,7 @@ def main():
             if tools.pending == ("104", "No encaja"):
                 confirmation = confirm_host(tools)
                 show({"host_confirmation": confirmation})
-                with args.trace.open("a") as handle:
+                with args.trace.open("a", encoding="utf-8") as handle:
                     handle.write(
                         json.dumps({"type": "host_confirmation", "result": confirmation}) + "\n"
                     )
@@ -452,7 +462,7 @@ def main():
         if report["passed"] != report["total"]:
             raise SystemExit(1)
     elif args.command == "trace":
-        for index, line in enumerate(args.path.read_text().splitlines(), 1):
+        for index, line in enumerate(args.path.read_text(encoding="utf-8").splitlines(), 1):
             event = json.loads(line)
             print(f"\nEvent {index}: {event['type']}")
             show(event)

@@ -52,7 +52,7 @@ def test_missing_key_is_explained(monkeypatch):
 
 def test_env_file_overrides_an_old_shell_key(tmp_path, monkeypatch):
     env = tmp_path / ".env"
-    env.write_text("OPENAI_API_KEY=new-session-key\n")
+    env.write_text("OPENAI_API_KEY=new-session-key\n", encoding="utf-8")
     monkeypatch.setattr(model_module, "ENV_FILE", env)
     monkeypatch.setenv("OPENAI_API_KEY", "old-key")
     model_module.load_settings()

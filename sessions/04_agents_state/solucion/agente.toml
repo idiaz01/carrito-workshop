@@ -10,11 +10,16 @@ max_tokens = 20000
 tipo = "fija"
 palabras = ["poema", "chiste", "canción", "receta", "cuento"]
 respuesta = "Solo puedo ayudarte con la tienda Carrito: productos, pedidos, envíos y devoluciones."
+# Reto (C31): «¿Qué micrófono me recomendáis para grabar una canción?» es una compra
+excepto = ["recomendáis", "recomiendas", "recomiéndame", "busco", "comprar"]
 
 # Workflow 2: preguntas de documentos, una sola llamada y sin tools
 [[rutas]]
 tipo = "buscar"
 palabras = ["envío", "envíos", "enviar", "garantía", "pago", "pagar", "cupón", "factura", "regalo"]
+# Reto: si habla de SUS pedidos (C29, C30), necesita get_order;
+# si pide un total (C32), necesita el precio del producto: search_products
+excepto = ["mi", "mis", "pedido", "pedidos", "total"]
 
 [subagente]
 activo = false       # aísla el contexto, pero gasta más tokens en total: mídelo
