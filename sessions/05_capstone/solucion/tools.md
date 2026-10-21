@@ -1,5 +1,5 @@
 ## search_products
-Busca productos del catálogo por palabras clave. Úsala para cualquier pregunta sobre productos, precios o características. max_price_eur es el presupuesto máximo en euros (null si el cliente no lo dice). Devuelve una lista de productos; price_cents está en céntimos (6990 = 69,90 €). Una lista vacía significa que no hay productos que cumplan.
+Busca productos del catálogo por palabras clave. Úsala para cualquier pregunta sobre productos, precios o características. max_price_eur es el presupuesto máximo en euros (null si el cliente no lo dice). Devuelve una lista de productos; price_cents está en céntimos (6990 = 69,90 €). La búsqueda compara las palabras de la consulta con el nombre y la descripción de cada producto, no con la categoría. Para buscar solo por precio, deja query vacío ("") y usa max_price_eur. Si la lista sale vacía, prueba con otras palabras antes de decir que no hay (C34, C35).
 
 ## get_order
 Lee un pedido del cliente activo por su número (order_id, por ejemplo "104"). Úsala solo si el cliente da el número; si no lo da, pregúntalo. Devuelve estado y fecha de entrega. {"error": "order_not_found"} significa que no existe o que no es de este cliente: no des más detalles.

@@ -11,30 +11,26 @@ import re
 # Los evaluadores que se usan en los experimentos (por nombre).
 EVALUADORES = ["cita_fuentes", "breve"]
 
+# Un ID de la tienda: P001, POL-DEV, AYU-ENV o un número de pedido de 3 cifras (104).
+IDS = r"P\d{3}|POL-[A-Z]{3}|AYU-[A-Z]{3}|\b\d{3}\b"
+
+# El final de una frase: . ? o ! seguido de un espacio o del final del texto.
+FIN_DE_FRASE = r"[.!?](\s|$)"
+
 
 def cita_fuentes(respuesta, herramientas):
-    """✏️ S5 · LAB 3 · RESP-1: si el agente usó alguna tool, la respuesta cita un ID.
-
-    IDs válidos: P001, POL-DEV, AYU-ENV o un número de pedido de 3 cifras (104).
-    Si no usó ninguna tool (por ejemplo, rechaza un poema), pasa: no hay nada que citar.
-
-    """
-    if not herramientas:
+    """RESP-1: si el agente usó alguna tool, la respuesta cita un ID."""
+    if not herramientas:  # regla 1: sin tools, no hay nada que citar
         return {"score": 1, "comment": "sin tools: no hay nada que citar"}
-
-    ids = re.findall(r"P\d{3}|POL-[A-Z]{3}|AYU-[A-Z]{3}|\b\d{3}\b", respuesta)
-    if len(ids) > 0:  # al menos un ID
+    ids = re.findall(IDS, respuesta)
+    if ids:  # regla 2: al menos un ID
         return {"score": 1, "comment": f"cita {ids}"}
-    return {"score": 0, "comment": "usa tools, pero no cita ningún ID"}
+    return {"score": 0, "comment": "usa tools, pero no cita ningún ID"}  # regla 3
 
 
 def breve(respuesta, herramientas):
-    """✏️ S5 · LAB 3 · RESP-3: como máximo cuatro frases.
-
-    Una frase termina en . ? o ! seguido de un espacio o del final del texto.
-
-    """
-    frases = len(re.findall(r"[.!?](\s|$)", respuesta))
-    if frases <= 4:  # RESP-3
+    """RESP-3: como máximo cuatro frases."""
+    frases = len(re.findall(FIN_DE_FRASE, respuesta))
+    if frases <= 4:
         return {"score": 1, "comment": f"{frases} frases"}
     return {"score": 0, "comment": f"{frases} frases (máximo 4)"}
