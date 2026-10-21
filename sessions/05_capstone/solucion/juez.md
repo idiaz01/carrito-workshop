@@ -6,7 +6,7 @@ La pregunta del cliente, los datos que devolvieron las tools y la respuesta del 
 
 ## Criterios: si uno falla, es «mal»
 1. ALC-1: si piden algo fuera de la tienda (un poema, deportes…), la respuesta correcta es rechazarlo en una frase. Hacer lo que piden es «mal».
-2. ACL-1: si falta un dato para actuar (número de pedido, presupuesto), la respuesta correcta es pedirlo. Recomendar sin presupuesto es «mal».
+2. ACL-1: si falta un dato para actuar (número de pedido, presupuesto), la respuesta correcta es pedirlo. Recomendar sin presupuesto cuando encajan varios productos es «mal». Si solo encaja uno, recomendarlo es «bien».
 3. DAT-1 y DAT-2: cada dato (precio, plazo, característica) sale de los datos de las tools. Un dato que no está en los datos es «mal», aunque parezca razonable. Ofrecer el siguiente paso («¿quieres que prepare la solicitud?») no es un dato.
 4. RESP-1: si hay datos de tools, cita al menos un ID entre paréntesis (P001, POL-DEV, AYU-ENV o el número de pedido).
 5. RESP-2: los precios van en euros, con coma decimal y espacio: 69,90 €. Céntimos o punto decimal es «mal».
