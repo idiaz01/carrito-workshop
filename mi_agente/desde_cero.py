@@ -8,7 +8,7 @@ Tu reto: cámbialo por TU dominio (una clínica, un restaurante, tu proyecto del
   uv run carrito reto                                 # tus casos, tus evaluadores y tu juez
   uv run carrito reto --langsmith --repeticiones 3    # lo mismo, como experimento
 
-Nivel 1: cambia DATOS, PROMPT, CASOS y JUEZ a tu dominio.
+Nivel 1: cambia los datos (CLASES, NORMAS), PROMPT, CASOS y JUEZ a tu dominio.
 Nivel 2: añade una tool nueva (copia una de las de abajo).
 Nivel 3: experimento en LangSmith con repeticiones.
 """
