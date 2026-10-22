@@ -42,6 +42,8 @@ EVALS = {
     "s3_casos.jsonl",
     "s3_rag.jsonl",
     "s4_casos.jsonl",
+    "s5_casos.jsonl",
+    "s5_juez.jsonl",
 }
 INTERNAL = re.compile(
     r"docs/(?:guiones|revision|research|output)|instructor-guide|evals/instructor|"

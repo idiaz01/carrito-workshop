@@ -155,3 +155,32 @@ def test_s4_lab3_review_rules():
         )
         == []
     )
+
+
+# ---------------------------------------------------------------------------
+# S5 · Lab 3 · mi_agente/evaluadores.py
+# ---------------------------------------------------------------------------
+def _evaluator(name):
+    from carrito.student import load_student_module
+
+    module = load_student_module("evaluadores")
+    if module is None:
+        raise NotImplementedError("Falta mi_agente/evaluadores.py")
+    return getattr(module, name)
+
+
+@TODO
+def test_s5_lab3_cita_fuentes():
+    cita = _evaluator("cita_fuentes")
+    assert cita("Te recomiendo P001.", ["search_products"])["score"] == 1
+    assert cita("Plazo de 30 días (POL-DEV).", ["search_policies"])["score"] == 1
+    assert cita("Te recomiendo los Nube.", ["search_products"])["score"] == 0
+    assert cita("Solo puedo ayudarte con la tienda.", [])["score"] == 1
+
+
+@TODO
+def test_s5_lab3_breve():
+    breve = _evaluator("breve")
+    assert breve("Una. Dos. Tres. Cuatro.", [])["score"] == 1
+    assert breve("Una. Dos. Tres. Cuatro. Cinco.", [])["score"] == 0
+    assert breve("¿Me dices el número?", [])["score"] == 1

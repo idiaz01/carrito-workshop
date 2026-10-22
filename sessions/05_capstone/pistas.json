@@ -1,0 +1,32 @@
+{
+  "1": [
+    "Copia mi_agente/skills/comparar.md con otro nombre y cambia la cabecera: nombre y descripcion.",
+    "La descripción decide cuándo la usa el modelo: escribe CUÁNDO usarla, en una frase.",
+    "En casos.jsonl, cada línea es un caso completo en JSON. Copia la línea de M1 y cambia id, spec, turns y checks.",
+    "Si el caso no llama a cargar_skill, mira la línea «Ruta» en --debug: una ruta de agente.toml puede atrapar la pregunta."
+  ],
+  "2": [
+    "Necesitas LangSmith activo: uv run carrito doctor debe decir \"langsmith\": \"OK\".",
+    "Al terminar, la terminal enseña los casos que fallan. Hoy hay cuatro que fallan con la solución de S4: C33–C36.",
+    "En LangSmith: Datasets & Experiments → tu dataset → Experiments. Haz clic en un caso con checks = 0: verás la respuesta, la traza y el motivo."
+  ],
+  "3": [
+    "Borra raise NotImplementedError. Escribe las reglas del docstring en orden: un if por regla.",
+    "cita_fuentes: if not herramientas: return {\"score\": 1, \"comment\": \"sin tools\"}. Después, ids = re.findall(IDS, respuesta).",
+    "cita_fuentes: if ids: return {\"score\": 1, \"comment\": f\"cita {ids}\"}. Si no, score 0.",
+    "breve: frases = len(re.findall(FIN_DE_FRASE, respuesta)). if frases <= 4: score 1. Si no, score 0."
+  ],
+  "4": [
+    "La rúbrica inicial («Di si la respuesta es buena») acierta lo obvio, pero falla en las reglas de la tienda. Mira el motivo humano de cada ❌.",
+    "Escribe un criterio por regla, con su ID de SPEC.md: ALC-1, ACL-1, DAT-1, RESP-1, RESP-2, RESP-3, ESC-2, PER-1.",
+    "Di qué cuenta como «bien» aunque no responda: rechazar lo que está fuera de la tienda o pedir un dato que falta.",
+    "Sé concreto: «precios con coma decimal y espacio: 69,90 €» acierta más que «formato correcto»."
+  ],
+  "reto": [
+    "Empieza por el Nivel 1: cambia CLASES, PROMPT, CASOS y JUEZ a tu dominio. Las tools pueden quedarse con otro nombre de dato.",
+    "Una tool es una función con @tool. El docstring es lo que lee el modelo: escribe CUÁNDO usarla.",
+    "Prueba primero con uv run carrito reto --chat. Cuando funcione, uv run carrito reto para ver tus casos y tu juez.",
+    "Si un caso falla, mira «Por qué fallan». ¿Falla el agente, el check o el juez? Cambia UNA pieza y repite.",
+    "Nivel 3: uv run carrito reto --langsmith --repeticiones 3. En LangSmith, el dataset se llama reto-<tu proyecto>."
+  ]
+}

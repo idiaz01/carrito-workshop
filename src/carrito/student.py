@@ -122,6 +122,35 @@ def output_status():
     return module.revisar(module.Respuesta(**SAMPLE_ANSWER), set())
 
 
+def load_skills():
+    """S5 · Lab 1. Each mi_agente/skills/*.md has a header (nombre, descripcion) and steps.
+
+    ---
+    nombre: regalos
+    descripcion: Cuándo usarla, en una frase.
+    ---
+    (las instrucciones)
+    """
+    skills = {}
+    folder = FOLDER / "skills"
+    for path in sorted(folder.glob("*.md")) if folder.exists() else []:
+        text = COMMENT.sub("", path.read_text(encoding="utf-8")).strip()
+        match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.DOTALL)
+        if not match:
+            continue
+        header = dict(
+            (k.strip().lower(), v.strip())
+            for k, v in (line.split(":", 1) for line in match.group(1).splitlines() if ":" in line)
+        )
+        name = header.get("nombre") or path.stem
+        if header.get("descripcion") and match.group(2).strip():
+            skills[name] = {
+                "descripcion": header["descripcion"],
+                "instrucciones": match.group(2).strip(),
+            }
+    return skills
+
+
 def load_rag_config():
     """S3 · Paso 2. None while mi_agente/rag.toml does not exist (S2 behaviour)."""
     return rag.load_config(FOLDER / "rag.toml")
@@ -195,6 +224,14 @@ class StudentTools(StoreTools):
 
     subagent = None
     _inside_subagent = False
+    skills = {}
+
+    def cargar_skill(self, nombre: str) -> dict:
+        """S5: progressive disclosure. The model sees names; it loads the steps on demand."""
+        skill = self.skills.get(nombre)
+        if skill is None:
+            return {"error": "skill_not_found", "disponibles": sorted(self.skills)}
+        return {"nombre": nombre, "instrucciones": skill["instrucciones"]}
 
     def dispatch(self, name, arguments):
         if name == "search_policies" and self.subagent and not self._inside_subagent:
@@ -449,6 +486,15 @@ class StudentAgent:
         extra = tuple(extra) + tuple(design_extra)
         formatter = self._formatter(module)
         context = [{"role": "system", "content": system}, *history]
+        skills = load_skills()
+        self.tools.skills = skills
+        if skills:
+            # S5: only names and descriptions enter the context; the steps load on demand.
+            descriptions.setdefault("cargar_skill", DESCRIPTIONS["cargar_skill"])
+            extra = tuple(extra) + ("cargar_skill",)
+            listing = "\n".join(f"- {n}: {v['descripcion']}" for n, v in skills.items())
+            context.insert(1, {"role": "system", "content": f"Skills disponibles:\n{listing}"})
+            self.uses["skills"] = ", ".join(skills)
 
         route = diseno.choose_route(text, design["rutas"]) if design else None
         limits = design["limites"] if design else {"max_pasos": max_steps}
